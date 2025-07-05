@@ -12,7 +12,7 @@ const allowedCommands = [
 ];
 
 const envCommands = [
-    'hostname', // Get the hostname of the host system
+    'HOST_HOSTNAME', // Get the hostname of the host system
 ];
 
 function getCommand(command: string): string {
