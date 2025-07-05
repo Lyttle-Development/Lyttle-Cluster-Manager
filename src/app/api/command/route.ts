@@ -2,10 +2,14 @@ import {NextResponse} from 'next/server';
 import {execAsync} from '@/app/api/command/execAsync';
 
 const allowedCommands = [
-    'reboot',
-    'docker ps',
-    'ls',
-    'df -h',
+    'reboot', // Reboot the host system
+    'docker ps', // List running Docker containers
+    'hostname', // Get the hostname of the host system
+    'uptime', // Get system uptime
+    'df -h', // Get disk space usage
+    'free -h', // Get memory usage
+    'cat /etc/os-release', // Get OS release information
+    'cat /proc/cpuinfo', // Get CPU information
 ];
 
 function getCommand(command: string): string {
