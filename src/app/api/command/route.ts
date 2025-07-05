@@ -4,16 +4,15 @@ import {execAsync} from '@/app/api/command/execAsync';
 const allowedCommands = [
     'reboot',
     'docker ps',
+    'ls',
+    'df -h',
 ];
 
 function getCommand(command: string): string {
+    // This will run arbitrary commands on the HOST via chroot.
+    // Your container must be run with: --privileged --pid=host -v /:/host
     return [
-        'docker', 'run', '--rm',
-        '--privileged',
-        '--pid=host',
-        '-v', '/var/run/docker.sock:/var/run/docker.sock',
-        'debian:12',
-        'bash', '-c', `"${command}"`
+        'chroot', '/host', 'bash', '-c', `"${command}"`
     ].join(' ');
 }
 

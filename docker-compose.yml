@@ -4,7 +4,9 @@ services:
   app:
     image: ghcr.io/lyttle-development/lyttle-cluster-manager:main
     privileged: true
+    pid: host
     volumes:
+      - /:/host
       - /var/run/docker.sock:/var/run/docker.sock
     ports:
       - 3000:3000
