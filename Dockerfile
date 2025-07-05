@@ -1,11 +1,6 @@
 # Use an official Node.js runtime as a parent image
 FROM node:22.11.0
 
-# Install Docker CLI and curl
-RUN apt-get update \
-  && apt-get install -y docker.io curl \
-  && rm -rf /var/lib/apt/lists/*
-
 # Set the working directory in the container
 WORKDIR /app
 

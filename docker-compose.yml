@@ -7,9 +7,8 @@ services:
     pid: host
     volumes:
       - /:/host
-      - /var/run/docker.sock:/var/run/docker.sock
     ports:
-      - 3000:3000
+      - 1111:3000
     deploy:
       mode: global
     environment:
