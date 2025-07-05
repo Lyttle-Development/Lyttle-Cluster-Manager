@@ -22,5 +22,5 @@ EXPOSE 3000
 CMD ["npm", "start"]
 
 # Add a health check
-#HEALTHCHECK --interval=30s --timeout=10s --start-period=300s --retries=3 \
-#  CMD curl -f http://localhost:3000/api/health || exit 1
+HEALTHCHECK --interval=30s --timeout=10s --start-period=300s --retries=3 \
+  CMD curl -f http://localhost:3000/api/health || exit 1
