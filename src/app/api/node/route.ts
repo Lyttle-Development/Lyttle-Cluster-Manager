@@ -155,13 +155,6 @@ function parseCpu(cpu: string) {
     }).filter(c => Object.keys(c).length > 0);
 }
 
-interface Rule {
-    to: string;
-    action: string;
-    from: string;
-    comment?: string;
-}
-
 // Helper to parse containers output
 function parseContainers(containers: string) {
     // containers is a string with names separated by newlines
