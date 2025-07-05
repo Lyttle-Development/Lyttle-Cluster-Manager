@@ -1,16 +1,19 @@
 # Use an official Node.js runtime as a parent image
 FROM node:22.11.0
 
-# Set the working directory in the container
-WORKDIR /usr/src/community-v3
+# Install Docker CLI and curl
+RUN apt-get update \
+  && apt-get install -y docker.io curl \
+  && rm -rf /var/lib/apt/lists/*
 
-# Copy the current directory contents into the container at /community-v3/Dashboard
+# Set the working directory in the container
+WORKDIR /app
+
+# Copy the current directory contents into the container at /app
 COPY . .
 
 # Install dependencies using npm ci
 RUN npm ci
-
-WORKDIR /usr/src/community-v3/Dashboard
 
 # Build the application
 RUN npm run docker:setup
