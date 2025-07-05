@@ -7,7 +7,7 @@ services:
     pid: host
     volumes:
       - /:/host
-    network_mode: "host"
+    network_mode: host
     deploy:
       mode: global
     environment:
