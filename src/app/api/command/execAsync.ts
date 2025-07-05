@@ -1,4 +1,5 @@
 import {exec} from 'child_process';
+import {AllowedGetCommand} from '@/app/api/command/getCommand';
 
 /**
  * Executes a shell command and returns a Promise with stdout.
@@ -6,7 +7,7 @@ import {exec} from 'child_process';
  * Rejects with stderr or error message on failure.
  * @param command The command to execute
  */
-export async function execAsync(command: string): Promise<string> {
+export async function execAsync(command: AllowedGetCommand): Promise<string> {
     console.log(`[execAsync] Invoked with command: "${command}"`);
 
     return new Promise((resolve, reject) => {
