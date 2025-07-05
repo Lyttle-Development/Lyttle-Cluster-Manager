@@ -3,13 +3,18 @@ version: '3.8'
 services:
   app:
     image: ghcr.io/lyttle-development/lyttle-cluster-manager:main
-    privileged: true
     pid: host
     volumes:
       - /:/host
-    network_mode: host
     deploy:
       mode: global
     environment:
       - NODE_ENV=production
       - HOST_HOSTNAME=${HOSTNAME}
+    networks:
+      - host_network
+
+networks:
+  host_network:
+    external:
+      name: "host"
