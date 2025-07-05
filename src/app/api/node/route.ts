@@ -8,7 +8,8 @@ function parseOsRelease(os: string) {
     os.split('\n').forEach(line => {
         const match = line.match(/^([A-Z0-9_]+)=(.*)$/);
         if (match) {
-            let [, key, value] = match;
+            const key = match[1];
+            let value = match[2];
             value = value.replace(/^"|"$/g, ''); // remove quotes
             result[key] = value;
         }
@@ -47,7 +48,6 @@ function parseMemory(mem: string) {
     // expect header on first line, Mem: on second, Swap: on third, tab/space separated
     const lines = mem.trim().split('\n');
     if (lines.length < 3) return {raw: mem};
-    const headers = lines[0].trim().split(/\s+/);
     const memValues = lines[1].trim().split(/\s+/);
     const swapValues = lines[2].trim().split(/\s+/);
     return {
@@ -72,7 +72,6 @@ function parseMemory(mem: string) {
 function parseDisk(disk: string) {
     const lines = disk.trim().split('\n');
     if (lines.length < 2) return [];
-    const header = lines[0].trim().split(/\s+/);
     return lines.slice(1).map(line => {
         const cols = line.trim().split(/\s+/);
         // Try to match header, but fallback for overlay/tabs:
@@ -87,12 +86,36 @@ function parseDisk(disk: string) {
     });
 }
 
+interface CpuEntry {
+    processor: number;
+    vendorId: string;
+    cpuFamily: number;
+    model: number;
+    modelName: string;
+    stepping: number;
+    microcode: string;
+    mhz: number;
+    cacheSize: string;
+    cores?: number; // optional, not always present
+}
+
 // Helper to parse /proc/cpuinfo into array of CPUs (only main fields)
 function parseCpu(cpu: string) {
     const cpus = cpu.split('\n\n').filter(Boolean);
     return cpus.map(block => {
         const lines = block.split('\n');
-        const cpuEntry: any = {};
+        const cpuEntry: CpuEntry = {
+            processor: -1, // default to -1 if not found
+            vendorId: '',
+            cpuFamily: -1,
+            model: -1,
+            modelName: '',
+            stepping: -1,
+            microcode: '',
+            mhz: 0,
+            cacheSize: '',
+            cores: undefined, // optional
+        };
         lines.forEach(line => {
             const [key, ...rest] = line.split(':');
             if (!key || rest.length === 0) return;
