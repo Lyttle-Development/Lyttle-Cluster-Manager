@@ -16,7 +16,7 @@ function getCommand(command: string): string {
     // This will run arbitrary commands on the HOST via chroot.
     // Your container must be run with: --privileged --pid=host -v /:/host
     return [
-        'chroot', '/host', 'bash', '-c', `"${command}"`
+        'chroot', '/host', '/bin/bash', '-c', `"${command}"`
     ].join(' ');
 }
 
