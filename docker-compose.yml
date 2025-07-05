@@ -13,3 +13,4 @@ services:
       mode: global
     environment:
       - NODE_ENV=production
+      - HOSTNAME=${HOSTNAME}

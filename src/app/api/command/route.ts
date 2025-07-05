@@ -4,12 +4,15 @@ import {execAsync} from '@/app/api/command/execAsync';
 const allowedCommands = [
     'reboot', // Reboot the host system
     'docker ps', // List running Docker containers
-    'hostname', // Get the hostname of the host system
     'uptime', // Get system uptime
     'df -h', // Get disk space usage
     'free -h', // Get memory usage
     'cat /etc/os-release', // Get OS release information
     'cat /proc/cpuinfo', // Get CPU information
+];
+
+const envCommands = [
+    'hostname', // Get the hostname of the host system
 ];
 
 function getCommand(command: string): string {
@@ -29,6 +32,10 @@ export async function GET(
 
     if (!command) {
         return NextResponse.json({error: 'No command provided.'}, {status: 400});
+    }
+
+    if (envCommands.includes(command)) {
+        return NextResponse.json({output: process.env[command]});
     }
 
     if (!allowedCommands.includes(command)) {
