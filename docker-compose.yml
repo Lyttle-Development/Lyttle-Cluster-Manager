@@ -9,6 +9,7 @@ services:
       mode: global
     environment:
       - NODE_ENV=production
+      - API_TOKEN=your_api_token_here
     networks:
       - host_network
 

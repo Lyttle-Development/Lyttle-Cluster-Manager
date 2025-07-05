@@ -2,10 +2,13 @@ import {NextResponse} from 'next/server';
 import {execAsync} from '@/app/api/command/execAsync';
 import {AllowedCommand, allowedCommands} from '@/app/api/command/config';
 import {getCommand} from '@/app/api/command/getCommand';
+import {checkToken} from '@/app/api/auth/token';
 
-export async function GET(
-    request: Request,
-): Promise<NextResponse> {
+export async function GET(request: Request): Promise<NextResponse> {
+    if (!checkToken(request)) {
+        return NextResponse.json({error: 'Unauthorized'}, {status: 401});
+    }
+
     const url = request.url;
     const urlObj = new URL(url);
     const command: AllowedCommand = urlObj.searchParams.get('command') as AllowedCommand;
