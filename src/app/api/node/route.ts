@@ -162,55 +162,6 @@ interface Rule {
     comment?: string;
 }
 
-// Helper to parse "ufw status verbose"
-function parseUfwStatus(ufw: string) {
-    const lines = ufw.trim().split('\n');
-    const details: Record<string, string> = {};
-    const rules: Rule[] = [];
-    let rulesStarted = false;
-    let headerIndexes: number[] = [];
-
-    for (let i = 0; i < lines.length; i++) {
-        const line = lines[i];
-        // Parse headers for rules table
-        if (!rulesStarted && line.startsWith('To')) {
-            // Find start indexes for columns
-            headerIndexes = [
-                line.indexOf('To'),
-                line.indexOf('Action'),
-                line.indexOf('From')
-            ];
-            rulesStarted = true;
-            continue;
-        }
-        // After header, parse rules
-        if (rulesStarted) {
-            if (line.trim() === '') continue;
-            const rule: Rule = {
-                to: line.substring(headerIndexes[0], headerIndexes[1]).trim(),
-                action: line.substring(headerIndexes[1], headerIndexes[2]).trim(),
-                from: line.substring(headerIndexes[2], line.indexOf('#') !== -1 ? line.indexOf('#') : undefined).trim(),
-                comment: line.indexOf('#') !== -1 ? line.substring(line.indexOf('#') + 1).trim() : undefined,
-            };
-            rules.push(rule);
-        } else {
-            // Parse status fields before rules
-            const match = line.match(/^([A-Za-z ]+):\s+(.*)$/);
-            if (match) {
-                details[match[1].trim().toLowerCase().replace(/ /g, '_')] = match[2].trim();
-            }
-        }
-    }
-    return {
-        raw: ufw,
-        status: details.status,
-        logging: details.logging,
-        default: details.default,
-        newProfiles: details.new_profiles,
-        rules
-    };
-}
-
 // Helper to parse containers output
 function parseContainers(containers: string) {
     // containers is a string with names separated by newlines
@@ -306,7 +257,6 @@ export async function GET(): Promise<NextResponse> {
     const disk: string = await execAsync(getCommand('df -h'));
     const cpu: string = await execAsync(getCommand('cat /proc/cpuinfo'));
     const os: string = await execAsync(getCommand('cat /etc/os-release'));
-    const ufw: string = await execAsync(getCommand('ufw status verbose'));
     const ipAddr: string = await execAsync(getCommand('ip addr'));
 
     const response = {
@@ -317,7 +267,6 @@ export async function GET(): Promise<NextResponse> {
         memory: parseMemory(memory.trim()),
         disk: parseDisk(disk.trim()),
         cpu: parseCpu(cpu.trim()),
-        ufw: parseUfwStatus(ufw.trim()),
         ip: parseIpAddr(ipAddr.trim()),
     };
 
