@@ -6,7 +6,7 @@ const allowedCommands = [
     'docker ps',
 ];
 
-export function getCommand(command: string): string {
+function getCommand(command: string): string {
     return [
         'docker', 'run', '--rm',
         '--privileged',
@@ -31,7 +31,7 @@ export async function GET(
     if (!allowedCommands.includes(command)) {
         return NextResponse.json({error: 'Command not allowed.'}, {status: 403});
     }
-    
+
     try {
         const output = await execAsync(getCommand(command));
         return NextResponse.json({output: output || 'Host is rebooting.'});
