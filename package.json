@@ -6,20 +6,27 @@
     "dev": "lyttle-cluster-manager/node_modules/.bin/next dev --turbopack",
     "build": "lyttle-cluster-manager/node_modules/.bin/next build",
     "start": "lyttle-cluster-manager/node_modules/.bin/next start",
-    "lint": "lyttle-cluster-manager/node_modules/.bin/next lint"
+    "lint": "lyttle-cluster-manager/node_modules/.bin/next lint",
+    "prisma:format": "prisma format",
+    "prisma:generate": "prisma generate",
+    "prisma:dangerously-db-push": "prisma db push",
+    "prisma:migrate": "prisma migrate dev --name merge-upstream",
+    "docker:setup": "npm run build",
+    "docker:build": "docker build -t community-v3-dashboard ."
   },
   "dependencies": {
+    "next": "15.3.5",
+    "prisma": "^6.11.1",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0",
-    "next": "15.3.5"
+    "react-dom": "^19.0.0"
   },
   "devDependencies": {
-    "typescript": "^5",
+    "@eslint/eslintrc": "^3",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "15.3.5",
-    "@eslint/eslintrc": "^3"
+    "typescript": "^5"
   }
 }
