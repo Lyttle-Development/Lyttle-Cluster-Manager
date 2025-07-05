@@ -11,4 +11,8 @@ export const allowedCommands = [
     'free -h', // Get memory usage
     'reboot', // Reboot the host system
     'uptime', // Get system uptime
+    'ip addr', // Get network interfaces and addresses
+    'ip link', // Get network interfaces
+    'ufw status', // Get UFW firewall status
+    'ufw status verbose', // Get detailed UFW firewall status
 ] as const;

@@ -45,7 +45,6 @@ function parseUptime(uptime: string) {
 
 // Helper to parse `free -h` memory output
 function parseMemory(mem: string) {
-    // expect header on first line, Mem: on second, Swap: on third, tab/space separated
     const lines = mem.trim().split('\n');
     if (lines.length < 3) return {raw: mem};
     const memValues = lines[1].trim().split(/\s+/);
@@ -74,7 +73,6 @@ function parseDisk(disk: string) {
     if (lines.length < 2) return [];
     return lines.slice(1).map(line => {
         const cols = line.trim().split(/\s+/);
-        // Try to match header, but fallback for overlay/tabs:
         return {
             filesystem: cols[0],
             size: cols[1],
@@ -157,23 +155,91 @@ function parseCpu(cpu: string) {
     }).filter(c => Object.keys(c).length > 0);
 }
 
+interface Rule {
+    to: string;
+    action: string;
+    from: string;
+    comment?: string;
+}
+
+// Helper to parse "ufw status verbose"
+function parseUfwStatus(ufw: string) {
+    const lines = ufw.trim().split('\n');
+    const details: Record<string, string> = {};
+    const rules: Rule[] = [];
+    let rulesStarted = false;
+    let headerIndexes: number[] = [];
+
+    for (let i = 0; i < lines.length; i++) {
+        const line = lines[i];
+        // Parse headers for rules table
+        if (!rulesStarted && line.startsWith('To')) {
+            // Find start indexes for columns
+            headerIndexes = [
+                line.indexOf('To'),
+                line.indexOf('Action'),
+                line.indexOf('From')
+            ];
+            rulesStarted = true;
+            continue;
+        }
+        // After header, parse rules
+        if (rulesStarted) {
+            if (line.trim() === '') continue;
+            const rule: Rule = {
+                to: line.substring(headerIndexes[0], headerIndexes[1]).trim(),
+                action: line.substring(headerIndexes[1], headerIndexes[2]).trim(),
+                from: line.substring(headerIndexes[2], line.indexOf('#') !== -1 ? line.indexOf('#') : undefined).trim(),
+                comment: line.indexOf('#') !== -1 ? line.substring(line.indexOf('#') + 1).trim() : undefined,
+            };
+            rules.push(rule);
+        } else {
+            // Parse status fields before rules
+            const match = line.match(/^([A-Za-z ]+):\s+(.*)$/);
+            if (match) {
+                details[match[1].trim().toLowerCase().replace(/ /g, '_')] = match[2].trim();
+            }
+        }
+    }
+    return {
+        raw: ufw,
+        status: details.status,
+        logging: details.logging,
+        default: details.default,
+        newProfiles: details.new_profiles,
+        rules
+    };
+}
+
+// Helper to parse containers output
+function parseContainers(containers: string) {
+    // containers is a string with names separated by newlines
+    return containers
+        .split('\n')
+        .map(name => name.trim())
+        .filter(name => name.length > 0)
+        .map(name => ({name}));
+}
+
 export async function GET(): Promise<NextResponse> {
     const hostname: string = await execAsync(getCommand('cat /etc/hostname'));
-    const containers: string[] = (await execAsync(getCommand('docker ps --format "{{.Names}}"'))).split('\n').filter(Boolean);
+    const containers: string = await execAsync(getCommand('docker ps --format "{{.Names}}"'));
     const uptime: string = await execAsync(getCommand('uptime'));
     const memory: string = await execAsync(getCommand('free -h'));
     const disk: string = await execAsync(getCommand('df -h'));
     const cpu: string = await execAsync(getCommand('cat /proc/cpuinfo'));
     const os: string = await execAsync(getCommand('cat /etc/os-release'));
+    const ufw: string = await execAsync(getCommand('ufw status verbose'));
 
     const response = {
         hostname: hostname.trim(),
         os: parseOsRelease(os.trim()),
         uptime: parseUptime(uptime.trim()),
-        containers: containers.map(name => name.trim()),
+        containers: parseContainers(containers),
         memory: parseMemory(memory.trim()),
         disk: parseDisk(disk.trim()),
         cpu: parseCpu(cpu.trim()),
+        ufw: parseUfwStatus(ufw.trim())
     };
 
     return NextResponse.json(response);
