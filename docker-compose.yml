@@ -3,14 +3,12 @@ version: '3.8'
 services:
   app:
     image: ghcr.io/lyttle-development/lyttle-cluster-manager:main
-    pid: host
     volumes:
       - /:/host
     deploy:
       mode: global
     environment:
       - NODE_ENV=production
-      - HOST_HOSTNAME=${HOSTNAME}
     networks:
       - host_network
 
