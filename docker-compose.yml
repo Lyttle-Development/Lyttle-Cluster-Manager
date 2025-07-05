@@ -7,8 +7,7 @@ services:
     pid: host
     volumes:
       - /:/host
-    ports:
-      - 1111:3000
+    network_mode: "host"
     deploy:
       mode: global
     environment:
