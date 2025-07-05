@@ -5,7 +5,6 @@ services:
     image: ghcr.io/lyttle-development/lyttle-cluster-manager:main
     privileged: true
     pid: host
-    uts: host
     volumes:
       - /:/host
     ports:
