@@ -1,5 +1,5 @@
 import {NextRequest, NextResponse} from 'next/server';
-import {RemoteApi} from '@/app/utils/remote-api';
+import {RemoteApi} from '@/utils/remote-api';
 
 export async function GET(request: NextRequest,
                           {params}: { params: Promise<{ host: string }> }
