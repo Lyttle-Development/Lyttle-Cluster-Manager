@@ -1,5 +1,5 @@
 import styles from './index.module.scss';
-import {Node} from '@/components/Clusters/components/Cluster';
+import {Node} from '@/components/Clusters/components/Node';
 
 interface ClustersProps {
     className?: string;
