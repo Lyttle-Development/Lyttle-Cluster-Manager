@@ -1,8 +1,8 @@
 import {getServerSession} from 'next-auth';
-import {authOptions} from '@/app/api/auth/[...nextauth]/route';
 import {redirect} from 'next/navigation';
 import {getToken} from 'next-auth/jwt';
 import {NextRequest} from 'next/server';
+import {authOptions} from '@/app/api/auth/[...nextauth]/options';
 
 /**
  * Checks if the currently authenticated user is in the allowed users list.
@@ -38,7 +38,7 @@ export async function checkGoogle(): Promise<boolean> {
     return !!allowedUsers.includes(userEmail);
 }
 
-export function checkGoogleToken(request: NextRequest): boolean {
+export async function checkGoogleToken(request: NextRequest): Promise<boolean> {
     const token = request.headers.get('Authorization')?.replace(/Bearer /, '');
     if (!token) return false;
 
