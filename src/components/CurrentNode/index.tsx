@@ -7,15 +7,12 @@ export async function CurrentNode() {
     let currentNode: string | null = null;
 
     // Safely construct the base URL
-    const url = `http://localhost:1111/api/command?command=cat%20/etc/hostname`;
+    const url = `http://localhost:1111/api/command?command=cat%20/etc/hostname&token=${process.env.API_TOKEN}`;
 
     try {
         const response = await fetch(url, {
-            cache: 'no-store', headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json',
-            }
-        }); // disables caching for up-to-date value
+            cache: 'no-store'
+        });
 
         if (!response.ok) {
             throw new Error('Network response was not ok');
