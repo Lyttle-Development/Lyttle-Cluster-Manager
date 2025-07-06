@@ -6,11 +6,17 @@ import styles from './index.module.scss';
 export async function CurrentNode() {
     let currentNode: string | null = null;
 
+    // Safely construct the base URL
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+    const url = `${baseUrl}/api/command?command=cat%20/etc/hostname`;
+
     try {
-        const response = await fetch(
-            `/api/command?command=cat%20/etc/hostname`,
-            {cache: 'no-store'} // disables caching for up-to-date value
-        );
+        const response = await fetch(url, {
+            cache: 'no-store', headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+            }
+        }); // disables caching for up-to-date value
 
         if (!response.ok) {
             throw new Error('Network response was not ok');
@@ -26,7 +32,6 @@ export async function CurrentNode() {
             currentNode = 'Unknown Node';
         }
     } catch (error) {
-        console.error('Error fetching current node:', error);
         currentNode = 'Error fetching node';
     }
 
@@ -35,7 +40,9 @@ export async function CurrentNode() {
                  title="Currently connected to node.">
             <Icon icon={faLink}
                   className={styles.icon}
-                  childrenClassName={styles.text}>{(currentNode || 'Unknown Node')}</Icon>
+                  childrenClassName={styles.text}>
+                {currentNode || 'Unknown Node'}
+            </Icon>
         </article>
     );
 }

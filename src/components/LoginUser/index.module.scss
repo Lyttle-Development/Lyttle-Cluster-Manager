@@ -1,0 +1,48 @@
+@use "~@/styles/variables.scss" as v;
+
+.loginUser {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.65rem;
+
+  .details {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    margin-left: 10px;
+
+    .name {
+      font-size: 1rem;
+      font-style: normal;
+      font-weight: 400;
+      line-height: normal;
+    }
+
+    .email {
+      color: v.$color-text-secondary;
+      font-size: 0.87rem;
+      font-style: normal;
+      font-weight: 400;
+      line-height: normal;
+    }
+  }
+
+  .avatar {
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 50%;
+    background-color: v.$color-background;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 50%;
+    }
+  }
+}
