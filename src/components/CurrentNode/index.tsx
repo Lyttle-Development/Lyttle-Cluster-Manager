@@ -31,7 +31,7 @@ export async function CurrentNode() {
         } else {
             currentNode = 'Unknown Node';
         }
-    } catch (error) {
+    } catch {
         currentNode = 'Error fetching node';
     }
 

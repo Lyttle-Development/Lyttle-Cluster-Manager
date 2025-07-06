@@ -104,8 +104,8 @@ export function Node({host}: NodeProps) {
             </p>
             <section className={styles.quickActions}>
                 <article className={styles.info}>
-                    <OsIcon os={node?.os.id}
-                            title={`Node is running ${cachedNode?.os.name} ${cachedNode?.os.version}`}/>
+                    <OsIcon os={node?.os?.id}
+                            title={`Node is running ${cachedNode?.os?.name} ${cachedNode?.os?.version}`}/>
                 </article>
                 <article className={styles.actions}>
                     <button onClick={onReboot} title="Reboot">
