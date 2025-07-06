@@ -1,4 +1,4 @@
-import {NextResponse} from 'next/server';
+import {NextRequest, NextResponse} from 'next/server';
 import {execAsync} from '@/app/api/command/execAsync';
 import {getCommand} from '@/app/api/command/getCommand';
 import {parseIpAddr} from '@/app/api/node/parseIpAddr';
@@ -9,9 +9,10 @@ import {parseMemory} from '@/app/api/node/parseMemory';
 import {parseUptime} from '@/app/api/node/parseUptime';
 import {parseOsRelease} from '@/app/api/node/parseOsRelease';
 import {checkToken} from '@/app/api/auth/token';
+import {checkGoogle, checkGoogleToken} from '@/app/api/auth/google';
 
-export async function GET(request: Request): Promise<NextResponse> {
-    if (!checkToken(request)) {
+export async function GET(request: NextRequest): Promise<NextResponse> {
+    if (!checkToken(request) && !await checkGoogle() && !checkGoogleToken(request)) {
         return NextResponse.json({error: 'Unauthorized'}, {status: 401});
     }
 

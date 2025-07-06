@@ -1,11 +1,12 @@
-import {NextResponse} from 'next/server';
+import {NextRequest, NextResponse} from 'next/server';
 import {execAsync} from '@/app/api/command/execAsync';
 import {AllowedCommand, allowedCommands} from '@/app/api/command/config';
 import {getCommand} from '@/app/api/command/getCommand';
 import {checkToken} from '@/app/api/auth/token';
+import {checkGoogle, checkGoogleToken} from '@/app/api/auth/google';
 
-export async function GET(request: Request): Promise<NextResponse> {
-    if (!checkToken(request)) {
+export async function GET(request: NextRequest): Promise<NextResponse> {
+    if (!checkToken(request) && !await checkGoogle() && !checkGoogleToken(request)) {
         return NextResponse.json({error: 'Unauthorized'}, {status: 401});
     }
 

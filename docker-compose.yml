@@ -8,8 +8,13 @@ services:
     deploy:
       mode: global
     environment:
-      - NODE_ENV=production
-      - API_TOKEN=your_api_token_here
+      - ALLOWED_CLUSTER_HOSTS=value-here
+      - ALLOWED_USERS=value-here
+      - API_TOKEN=value-here
+      - GOOGLE_CLIENT_ID=value-here
+      - GOOGLE_CLIENT_SECRET=value-here
+      - NEXTAUTH_SECRET=value-here
+      - NEXTAUTH_URL=value-here
     networks:
       - host_network
 

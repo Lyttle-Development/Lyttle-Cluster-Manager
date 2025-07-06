@@ -1,4 +1,6 @@
-export function checkToken(request: Request): boolean {
+import {NextRequest} from 'next/server';
+
+export function checkToken(request: NextRequest): boolean {
     // Extract the token from the request headers or query parameters
     const url = new URL(request.url);
     const token = request.headers.get('Authorization') || url.searchParams.get('token');
