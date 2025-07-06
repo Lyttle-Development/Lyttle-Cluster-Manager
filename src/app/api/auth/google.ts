@@ -1,7 +1,5 @@
 import {getServerSession} from 'next-auth';
 import {redirect} from 'next/navigation';
-import {getToken} from 'next-auth/jwt';
-import {NextRequest} from 'next/server';
 import {authOptions} from '@/app/api/auth/[...nextauth]/options';
 
 /**
@@ -33,35 +31,6 @@ export async function checkGoogle(): Promise<boolean> {
     const userEmail = session?.user?.email?.toLowerCase();
     if (!userEmail) {
         return false; // No email in session
-    }
-
-    return !!allowedUsers.includes(userEmail);
-}
-
-export async function checkGoogleToken(request: NextRequest): Promise<boolean> {
-    const token = request.headers.get('Authorization')?.replace(/Bearer /, '');
-    if (!token) return false;
-
-    const allowedUsersEnv = process.env.ALLOWED_USERS;
-    if (!allowedUsersEnv) {
-        // No allowed users configured, deny access by default
-        return false;
-    }
-
-    const decoded = await getToken({
-        req: request,
-        secret: process.env.NEXTAUTH_SECRET
-    });
-
-    // Create array of allowed emails, trimmed and lowercased
-    const allowedUsers = allowedUsersEnv
-        .split(';')
-        .map((email) => email.trim().toLowerCase())
-        .filter(Boolean);
-
-    const userEmail = decoded?.email?.toLowerCase();
-    if (!userEmail) {
-        return false; // No email in token
     }
 
     return !!allowedUsers.includes(userEmail);

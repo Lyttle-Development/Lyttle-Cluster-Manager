@@ -9,10 +9,10 @@ import {parseMemory} from '@/app/api/node/parseMemory';
 import {parseUptime} from '@/app/api/node/parseUptime';
 import {parseOsRelease} from '@/app/api/node/parseOsRelease';
 import {checkToken} from '@/app/api/auth/token';
-import {checkGoogle, checkGoogleToken} from '@/app/api/auth/google';
+import {checkGoogle} from '@/app/api/auth/google';
 
 export async function GET(request: NextRequest): Promise<NextResponse> {
-    if (!checkToken(request) && !await checkGoogle() && !await checkGoogleToken(request)) {
+    if (!checkToken(request) && !await checkGoogle()) {
         return NextResponse.json({error: 'Unauthorized'}, {status: 401});
     }
 

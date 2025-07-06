@@ -3,10 +3,10 @@ import {execAsync} from '@/app/api/command/execAsync';
 import {AllowedCommand, allowedCommands} from '@/app/api/command/config';
 import {getCommand} from '@/app/api/command/getCommand';
 import {checkToken} from '@/app/api/auth/token';
-import {checkGoogle, checkGoogleToken} from '@/app/api/auth/google';
+import {checkGoogle} from '@/app/api/auth/google';
 
 export async function GET(request: NextRequest): Promise<NextResponse> {
-    if (!checkToken(request) && !await checkGoogle() && !await checkGoogleToken(request)) {
+    if (!checkToken(request) && !await checkGoogle()) {
         return NextResponse.json({error: 'Unauthorized'}, {status: 401});
     }
 
