@@ -1,0 +1,7 @@
+@use "~@/styles/variables.scss" as v;
+
+.icon_group {
+  display: inline-flex;
+  gap: 1rem;
+  justify-content: center;
+}

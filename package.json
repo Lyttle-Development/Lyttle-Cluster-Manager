@@ -15,6 +15,9 @@
     "docker:build": "docker build -t community-v3-dashboard ."
   },
   "dependencies": {
+    "@fortawesome/fontawesome-svg-core": "^6.7.2",
+    "@fortawesome/free-solid-svg-icons": "^6.7.2",
+    "@fortawesome/react-fontawesome": "^0.2.2",
     "classnames": "^2.5.1",
     "next": "15.3.5",
     "next-auth": "^4.24.11",

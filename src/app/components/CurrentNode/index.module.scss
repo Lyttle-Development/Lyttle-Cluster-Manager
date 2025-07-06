@@ -1,0 +1,22 @@
+@use "~@/styles/variables.scss" as v;
+
+.currentNode {
+  display: flex;
+  padding: 0.75rem 1rem;
+  justify-content: center;
+  align-items: center;
+  gap: 0.375rem;
+  border-radius: 0.5625rem;
+  border: 1px solid v.$color-border;
+  background: #181825;
+
+  .icon {
+    width: 1.12138rem;
+    height: 0.91856rem;
+    color: v.$color-text-secondary;
+  }
+
+  .text {
+    text-transform: uppercase;
+  }
+}

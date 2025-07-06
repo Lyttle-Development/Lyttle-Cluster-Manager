@@ -1,6 +1,7 @@
 import type {Metadata} from 'next';
 import {Poppins} from 'next/font/google';
-import './reset.scss';
+import '../styles/reset.scss';
+import '../styles/defaults.scss';
 import classNames from 'classnames';
 import styles from './layout.module.scss';
 import {MainNavigation} from '@/app/components/MainNavigation';
