@@ -8,6 +8,7 @@ services:
     deploy:
       mode: global
     environment:
+      - NODE_ENV=production
       - ALLOWED_CLUSTER_HOSTS=value-here
       - ALLOWED_USERS=value-here
       - API_TOKEN=value-here
