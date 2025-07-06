@@ -1,7 +1,7 @@
-import {Logo} from '@/app/components/Logo';
+import {Logo} from '@/components/Logo';
 import styles from './index.module.scss';
-import {CurrentNode} from '@/app/components/CurrentNode';
-import {LoginUser} from '@/app/components/LoginUser';
+import {CurrentNode} from '@/components/CurrentNode';
+import {LoginUser} from '@/components/LoginUser';
 
 export function Header() {
     return (

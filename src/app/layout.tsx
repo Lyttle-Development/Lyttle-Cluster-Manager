@@ -4,7 +4,7 @@ import '../styles/reset.scss';
 import '../styles/defaults.scss';
 import classNames from 'classnames';
 import styles from './layout.module.scss';
-import {MainNavigation} from '@/app/components/MainNavigation';
+import {MainNavigation} from '@/components/MainNavigation';
 
 const poppins = Poppins({
     subsets: ['latin'],

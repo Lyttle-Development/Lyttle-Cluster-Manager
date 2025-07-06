@@ -1,5 +1,5 @@
 import {faLink} from '@fortawesome/free-solid-svg-icons';
-import {Icon} from '@/app/components/Icon';
+import {Icon} from '@/components/Icon';
 import styles from './index.module.scss';
 
 // This is now a server component

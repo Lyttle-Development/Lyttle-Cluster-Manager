@@ -1,5 +1,5 @@
 import styles from './page.module.scss';
-import {Clusters} from '@/app/components/Clusters';
+import {Clusters} from '@/components/Clusters';
 
 export default function Home() {
     return (

@@ -7,7 +7,7 @@ export function Navigation() {
             <nav className={styles.nav}>
                 <ul>
                     <li>
-                        <Link href="/">Manage Clusters</Link>
+                        <Link href="/public">Manage Clusters</Link>
                     </li>
                     <li>
                         <Link href="/application">Applications</Link>
