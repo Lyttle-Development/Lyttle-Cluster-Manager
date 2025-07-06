@@ -1,5 +1,16 @@
+export interface DiskEntry {
+    filesystem: string;
+    size: string;
+    used: string;
+    avail: string;
+    usePct: string;
+    mountedOn: string;
+}
+
+export type DiskEntries = DiskEntry[];
+
 // Helper to parse `df -h` disk output
-export function parseDisk(disk: string) {
+export function parseDisk(disk: string): DiskEntries {
     const lines = disk.trim().split('\n');
     if (lines.length < 2) return [];
     return lines.slice(1).map(line => {

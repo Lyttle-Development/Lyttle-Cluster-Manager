@@ -1,5 +1,17 @@
+export interface OsReleaseEntry {
+    prettyName: string;
+    name: string;
+    versionId: string;
+    version: string;
+    versionCodename: string;
+    id: string;
+    homeUrl: string;
+    supportUrl: string;
+    bugReportUrl: string;
+}
+
 // Helper to parse /etc/os-release into an object
-export function parseOsRelease(os: string) {
+export function parseOsRelease(os: string): OsReleaseEntry {
     const result: Record<string, string> = {};
     os.split('\n').forEach(line => {
         const match = line.match(/^([A-Z0-9_]+)=(.*)$/);

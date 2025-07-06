@@ -1,15 +1,29 @@
 import {NextRequest, NextResponse} from 'next/server';
 import {execAsync} from '@/app/api/command/execAsync';
 import {getCommand} from '@/app/api/command/getCommand';
-import {parseIpAddr} from '@/app/api/node/parseIpAddr';
-import {parseContainers} from '@/app/api/node/parseContainers';
-import {parseCpu} from '@/app/api/node/parseCpu';
-import {parseDisk} from '@/app/api/node/parseDisk';
-import {parseMemory} from '@/app/api/node/parseMemory';
-import {parseUptime} from '@/app/api/node/parseUptime';
-import {parseOsRelease} from '@/app/api/node/parseOsRelease';
+import {IpAddrEntries, parseIpAddr} from '@/app/api/node/parseIpAddr';
+import {
+    ContainerEntries,
+    parseContainers
+} from '@/app/api/node/parseContainers';
+import {CpuEntries, parseCpu} from '@/app/api/node/parseCpu';
+import {DiskEntries, parseDisk} from '@/app/api/node/parseDisk';
+import {MemoryEntries, parseMemory} from '@/app/api/node/parseMemory';
+import {parseUptime, UptimeEntry} from '@/app/api/node/parseUptime';
+import {OsReleaseEntry, parseOsRelease} from '@/app/api/node/parseOsRelease';
 import {checkToken} from '@/app/api/auth/token';
 import {checkGoogle} from '@/app/api/auth/google';
+
+export interface NodeResponse {
+    hostname: string;
+    os: OsReleaseEntry;
+    uptime: UptimeEntry;
+    containers: ContainerEntries;
+    memory: MemoryEntries;
+    disk: DiskEntries;
+    cpu: CpuEntries;
+    ip: IpAddrEntries;
+}
 
 export async function GET(request: NextRequest): Promise<NextResponse> {
     if (!checkToken(request) && !await checkGoogle()) {

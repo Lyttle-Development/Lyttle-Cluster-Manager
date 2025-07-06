@@ -1,5 +1,24 @@
+export interface MemoryEntry {
+    raw: string;
+    mem?: {
+        total: string;
+        used: string;
+        free: string;
+        shared: string;
+        buffCache: string;
+        available: string;
+    };
+    swap?: {
+        total: string;
+        used: string;
+        free: string;
+    };
+}
+
+export type MemoryEntries = MemoryEntry;
+
 // Helper to parse `free -h` memory output
-export function parseMemory(mem: string) {
+export function parseMemory(mem: string): MemoryEntries {
     const lines = mem.trim().split('\n');
     if (lines.length < 3) return {raw: mem};
     const memValues = lines[1].trim().split(/\s+/);

@@ -1,5 +1,11 @@
+export interface ContainerEntry {
+    name: string;
+}
+
+export type ContainerEntries = ContainerEntry[];
+
 // Helper to parse containers output
-export function parseContainers(containers: string) {
+export function parseContainers(containers: string): ContainerEntries {
     // containers is a string with names separated by newlines
     return containers
         .split('\n')

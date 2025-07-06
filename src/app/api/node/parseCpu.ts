@@ -1,4 +1,4 @@
-interface CpuEntry {
+export interface CpuEntry {
     processor: number;
     vendorId: string;
     cpuFamily: number;
@@ -11,8 +11,10 @@ interface CpuEntry {
     cores?: number; // optional, not always present
 }
 
+export type CpuEntries = CpuEntry[];
+
 // Helper to parse /proc/cpuinfo into array of CPUs (only main fields)
-export function parseCpu(cpu: string) {
+export function parseCpu(cpu: string): CpuEntries {
     const cpus = cpu.split('\n\n').filter(Boolean);
     return cpus.map(block => {
         const lines = block.split('\n');

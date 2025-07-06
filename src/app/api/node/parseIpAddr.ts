@@ -1,4 +1,4 @@
-interface IpInterfaces {
+export interface IpAddrEntry {
     index: number;
     name: string;
     flags: string[];
@@ -6,12 +6,12 @@ interface IpInterfaces {
     qdisc: string;
     state: string;
     group: string | null;
-    addresses: IpInterfaceAddress[];
+    addresses: IpAddrAdressEntry[];
     ether: string | null;
     altname: string | null;
 }
 
-interface IpInterfaceAddress {
+export interface IpAddrAdressEntry {
     family: string;
     address: string;
     brd?: string;
@@ -19,12 +19,14 @@ interface IpInterfaceAddress {
     label?: string;
 }
 
+export type IpAddrEntries = IpAddrEntry[];
+
 // Helper to parse `ip addr` output
-export function parseIpAddr(ipAddr: string) {
+export function parseIpAddr(ipAddr: string): IpAddrEntries {
     // This parser is basic, parses interfaces and their properties.
-    const interfaces: IpInterfaces[] = [];
+    const interfaces: IpAddrEntry[] = [];
     const lines = ipAddr.trim().split('\n');
-    let current: IpInterfaces | null = null;
+    let current: IpAddrEntry | null = null;
 
     const ifaceRegex = /^(\d+): ([^:]+): <([^>]*)> mtu (\d+) qdisc ([^ ]+) state ([^ ]+)(?: group ([^ ]+))?/;
     for (const line of lines) {
@@ -61,7 +63,7 @@ export function parseIpAddr(ipAddr: string) {
         // inet/inet6
         const inetMatch = line.trim().match(/^(inet6?) ([^ ]+)(?: brd ([^ ]+))?(?: scope ([^ ]+)(?: ([^ ]+))?)?/);
         if (inetMatch) {
-            const address: IpInterfaceAddress = {
+            const address: IpAddrAdressEntry = {
                 family: inetMatch[1],
                 address: inetMatch[2],
                 brd: inetMatch[3] || undefined,
