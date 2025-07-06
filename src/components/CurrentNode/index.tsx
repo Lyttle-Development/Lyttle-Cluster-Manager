@@ -7,8 +7,7 @@ export async function CurrentNode() {
     let currentNode: string | null = null;
 
     // Safely construct the base URL
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
-    const url = `${baseUrl}/api/command?command=${encodeURIComponent('cat /etc/hostname')}`;
+    const url = `http://localhost:1111/api/command?command=cat%20/etc/hostname`;
 
     try {
         const response = await fetch(url, {
