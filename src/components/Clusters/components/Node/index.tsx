@@ -4,7 +4,13 @@ import {NodeResponse} from '@/app/api/node/route';
 import {useEffect, useState} from 'react';
 import classNames from 'classnames';
 import {Icon} from '@/components/Icon';
-import {faCog, faRepeat, faStopwatch} from '@fortawesome/free-solid-svg-icons';
+import {
+    faCog,
+    faRepeat,
+    faRoute,
+    faServer,
+    faStopwatch
+} from '@fortawesome/free-solid-svg-icons';
 import {faDocker} from '@fortawesome/free-brands-svg-icons';
 import {OsIcon} from '@/components/Icon/components/OsIcon';
 
@@ -119,6 +125,14 @@ export function Node({host}: NodeProps) {
                         <article className={styles.info}>
                             <OsIcon os={node?.os?.id}
                                     title={`Node is running ${cachedNode?.os?.name} ${cachedNode?.os?.version}`}/>
+                            {node?.containers.find((c) => c.name.includes('lyttle-nginx')) && (
+                                <Icon icon={faRoute}
+                                      title="Currently routes NGINX requests"></Icon>
+                            )}
+                            {node?.containers.find((c) => c.name.includes('portainer_portainer')) && (
+                                <Icon icon={faServer}
+                                      title="Currently routes Portainer UI requests"></Icon>
+                            )}
                         </article>
                         <article className={styles.actions}>
                             <button onClick={onReboot} title="Reboot">

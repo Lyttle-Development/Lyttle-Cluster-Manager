@@ -71,6 +71,9 @@
     margin-top: auto;
 
     .info {
+      display: flex;
+      flex-direction: row;
+      gap: 0.5rem;
       margin-bottom: -0.5rem;
     }
 
