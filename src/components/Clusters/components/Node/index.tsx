@@ -26,6 +26,7 @@ export function Node({host}: NodeProps) {
                 }
                 const data: NodeResponse = await response.json();
                 setNode(data);
+                if (!!data) setCachedNode(data);
                 setStatus(!!data ? 'running' : 'offline');
             } catch (error) {
                 console.error('Error fetching node data:', error);
@@ -48,7 +49,7 @@ export function Node({host}: NodeProps) {
                 .then(response => response.json())
                 .then(data => {
                     setNode(!!data ? data : null);
-                    if (dynamicStatuses.includes(status) || !!data) setStatus(!!data ? 'running' : 'offline');
+                    if (dynamicStatuses.includes(status) || data !== null) setStatus(!!data ? 'running' : 'offline');
                 })
                 .catch(() => {
                     setNode(null);
@@ -56,7 +57,7 @@ export function Node({host}: NodeProps) {
                 });
         }, 5000); // Retry every 5 seconds
         return () => clearInterval(interval);
-    }, [node]);
+    }, [node, status]);
 
     const onReboot = async () => {
         // Ask for confirmation before rebooting
