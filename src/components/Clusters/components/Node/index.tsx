@@ -36,24 +36,26 @@ export function Node({host}: NodeProps) {
     }, [host]);
 
     useEffect(() => {
-        if (node) {
-            setCachedNode(node);
-        } else {
-            // try to refetch them while status is rebooting
-            const interval = setInterval(() => {
-                void fetch(`/api/node/${host}`)
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data) {
-                            setNode(data);
-                            setStatus('running');
-                            clearInterval(interval);
-                        }
-                    })
-                    .catch(() => null);
-            }, 5000); // Retry every 5 seconds
-            return () => clearInterval(interval);
-        }
+        // Refetch node data if it changes
+        const interval = setInterval(() => {
+            if (!!node) setCachedNode(node);
+            const dynamicStatuses = ['running', 'reloading', 'loading', 'offline'];
+
+            // Set the status to reloading if the node is already loaded else loading
+            if (dynamicStatuses.includes(status)) setStatus(!!node ? 'reloading' : 'loading');
+
+            void fetch(`/api/node/${host}`)
+                .then(response => response.json())
+                .then(data => {
+                    setNode(!!data ? data : null);
+                    if (dynamicStatuses.includes(status) || !!data) setStatus(!!data ? 'running' : 'offline');
+                })
+                .catch(() => {
+                    setNode(null);
+                    if (dynamicStatuses.includes(status)) setStatus('offline');
+                });
+        }, 5000); // Retry every 5 seconds
+        return () => clearInterval(interval);
     }, [node]);
 
     const onReboot = async () => {
@@ -81,41 +83,53 @@ export function Node({host}: NodeProps) {
         alert(`Settings for node ${node?.hostname} are not implemented yet.`);
     };
 
+    let hostname = status === 'loading' ? 'Loading...' : 'Unknown host';
+
+    if (cachedNode && cachedNode?.hostname) {
+        hostname = cachedNode.hostname;
+    }
+
+    const formattedStatus = status.charAt(0).toUpperCase() + status.slice(1);
+
     return (
         <section className={styles.node}>
             <article className={styles.heading}>
-                <h3 className={styles.hostname}>{cachedNode?.hostname || 'Unknown host'}</h3>
+                <h3 className={styles.hostname}>{hostname}</h3>
                 <span
                     className={classNames(styles.status, {
                         [styles.green]: status === 'running',
                         [styles.red]: status === 'offline',
-                        [styles.yellow]: ['rebooting', 'loading'].includes(status),
+                        [styles.yellow]: ['rebooting', 'loading', 'reloading'].includes(status),
                     })}
                     title={`Currently ${status}`}
                 />
             </article>
             <p className={styles.iconCombi}>
                 <Icon icon={faStopwatch} className={styles.icon}/>
-                <span>{node?.uptime?.up || (status !== 'rebooting' ? 'Unavailable' : 'Rebooting')}</span>
+                <span>{node?.uptime?.up || formattedStatus}</span>
             </p>
-            <p className={styles.iconCombi}>
-                <Icon icon={faDocker} className={styles.icon}/>
-                <span>{node?.containers?.length || '0'} active containers</span>
-            </p>
-            <section className={styles.quickActions}>
-                <article className={styles.info}>
-                    <OsIcon os={node?.os?.id}
-                            title={`Node is running ${cachedNode?.os?.name} ${cachedNode?.os?.version}`}/>
-                </article>
-                <article className={styles.actions}>
-                    <button onClick={onReboot} title="Reboot">
-                        <Icon icon={faRepeat} className={styles.icon}/>
-                    </button>
-                    <button onClick={onSettings} title="Settings">
-                        <Icon icon={faCog} className={styles.icon}/>
-                    </button>
-                </article>
-            </section>
+            {(status === 'running' || status === 'reloading') && (
+                <>
+                    <p className={styles.iconCombi}>
+                        <Icon icon={faDocker} className={styles.icon}/>
+                        <span>{node?.containers?.length || '0'} active containers</span>
+                    </p>
+                    <section className={styles.quickActions}>
+                        <article className={styles.info}>
+                            <OsIcon os={node?.os?.id}
+                                    title={`Node is running ${cachedNode?.os?.name} ${cachedNode?.os?.version}`}/>
+                        </article>
+                        <article className={styles.actions}>
+                            <button onClick={onReboot} title="Reboot">
+                                <Icon icon={faRepeat} className={styles.icon}/>
+                            </button>
+                            <button onClick={onSettings} title="Settings">
+                                <Icon icon={faCog} className={styles.icon}/>
+                            </button>
+                        </article>
+                    </section>
+                </>
+            )}
         </section>
     );
 }
