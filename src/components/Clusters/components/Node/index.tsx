@@ -1,7 +1,5 @@
 'use client';
 import styles from './index.module.scss';
-import {NodeResponse} from '@/app/api/node/route';
-import {useEffect, useState} from 'react';
 import classNames from 'classnames';
 import {Icon} from '@/components/Icon';
 import {
@@ -13,80 +11,16 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 import {faDocker} from '@fortawesome/free-brands-svg-icons';
 import {OsIcon} from '@/components/Icon/components/OsIcon';
+import {useNode} from '@/hooks/useNode';
 
 export interface NodeProps {
-    host: string; // Replace 'any' with the actual type of your node
+    host: string;
 }
 
 export function Node({host}: NodeProps) {
-    const [node, setNode] = useState<NodeResponse | null>(null);
-    const [cachedNode, setCachedNode] = useState<NodeResponse | null>(null);
-    const [status, setStatus] = useState<string>('loading');
-
-    useEffect(() => {
-        const fetchNodeData = async () => {
-            try {
-                const response = await fetch(`/api/node/${host}`);
-                if (!response.ok) {
-                    throw new Error(`Failed to fetch data for host: ${host}`);
-                }
-                const data: NodeResponse = await response.json();
-                setNode(data);
-                if (!!data) setCachedNode(data);
-                setStatus(!!data ? 'running' : 'offline');
-            } catch (error) {
-                console.error('Error fetching node data:', error);
-            }
-        };
-
-        void fetchNodeData();
-    }, [host]);
-
-    useEffect(() => {
-        // Refetch node data if it changes
-        const interval = setInterval(() => {
-            if (!!node) setCachedNode(node);
-            const dynamicStatuses = ['running', 'reloading', 'loading', 'offline'];
-
-            // Set the status to reloading if the node is already loaded else loading
-            if (dynamicStatuses.includes(status)) setStatus(!!node ? 'reloading' : 'loading');
-
-            void fetch(`/api/node/${host}`)
-                .then(response => response.json())
-                .then(data => {
-                    setNode(!!data ? data : null);
-                    if (dynamicStatuses.includes(status) || data !== null) setStatus(!!data ? 'running' : 'offline');
-                })
-                .catch(() => {
-                    setNode(null);
-                    if (dynamicStatuses.includes(status)) setStatus('offline');
-                });
-        }, 5000); // Retry every 5 seconds
-        return () => clearInterval(interval);
-    }, [node, status]);
-
-    const onReboot = async () => {
-        // Ask for confirmation before rebooting
-        const confirmed = window.confirm(`Are you sure you want to reboot ${node?.hostname}?`);
-        if (confirmed) {
-            try {
-                const response = await fetch(`/api/command/${host}?command=reboot`, {
-                    method: 'GET',
-                });
-                if (!response.ok) {
-                    throw new Error(`Failed to reboot node: ${node?.hostname}`);
-                }
-                setStatus('rebooting');
-                setNode(null);
-            } catch (error) {
-                console.error('Error rebooting node:', error);
-                alert('Failed to reboot node. Please try again later.');
-            }
-        }
-    };
+    const {node, cachedNode, status, sendCommand} = useNode(host);
 
     const onSettings = () => {
-        // Placeholder for settings action
         alert(`Settings for node ${node?.hostname} are not implemented yet.`);
     };
 
@@ -115,7 +49,7 @@ export function Node({host}: NodeProps) {
                 <Icon icon={faStopwatch} className={styles.icon}/>
                 <span>{node?.uptime?.up || formattedStatus}</span>
             </p>
-            {(status === 'running' || status === 'reloading') && (
+            {(status === 'running' || status === 'reloading') && !!node && (
                 <>
                     <p className={styles.iconCombi}>
                         <Icon icon={faDocker} className={styles.icon}/>
@@ -135,7 +69,9 @@ export function Node({host}: NodeProps) {
                             )}
                         </article>
                         <article className={styles.actions}>
-                            <button onClick={onReboot} title="Reboot">
+                            <button
+                                onClick={() => sendCommand('reboot', 'rebooting')}
+                                title="Reboot">
                                 <Icon icon={faRepeat} className={styles.icon}/>
                             </button>
                             <button onClick={onSettings} title="Settings">
