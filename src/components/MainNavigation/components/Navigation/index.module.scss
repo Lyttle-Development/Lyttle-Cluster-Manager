@@ -1,0 +1,90 @@
+@use "~@/styles/variables.scss" as v;
+
+/* Top horizontal bar — matches app styling, left-aligned */
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  width: 100%;
+  backdrop-filter: saturate(140%) blur(6px);
+  background:
+    /* keep the beautiful app-wide background treatment */
+    linear-gradient(180deg, rgba(255,255,255,0.035) 0%, rgba(255,255,255,0) 100%),
+    v.$color-background;
+  border-bottom: 1px solid v.$color-border;
+}
+
+/* Full-width inner container, no centering */
+.nav {
+  width: 100%;
+  margin: 0;               /* no center-like margin */
+  padding: 0.55rem 1rem;   /* match app paddings; adjust if needed */
+  box-sizing: border-box;
+}
+
+/* Horizontal list, left aligned */
+.list {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start; /* left */
+  gap: 0.35rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  flex-wrap: wrap; /* wrap on small screens */
+}
+
+.item {
+  display: contents; /* links handle spacing */
+}
+
+/* Link pill — matches button/controls aesthetic */
+.link {
+  position: relative; /* needed for active underline */
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.6rem 0.9rem 0.5rem; /* slight bottom space for the accent bar */
+  border-radius: 0.6rem;
+  text-decoration: none;
+  color: v.$color-text-primary;
+  background: transparent;
+  line-height: 1.2;
+  font-weight: 600;
+  letter-spacing: 0.015em;
+  transition: background 120ms ease, color 120ms ease, box-shadow 120ms ease;
+
+  &:hover {
+    background: rgba(255,255,255,0.06);
+    color: v.$color-text-primary;
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow:
+      0 0 0 2px rgba(255,255,255,0.08),
+      0 0 0 4px rgba(164,232,160,0.35); /* success-tinted focus ring */
+  }
+}
+
+/* Active tab — subtle bottom accent only (no filled background) */
+.active {
+  color: v.$color-text-primary;
+  background: transparent; /* remove filled background */
+  box-shadow: none;        /* remove inset fills from previous design */
+
+  /* Accent bar uses the app success color; spans the link width with slight inset */
+  &::after {
+    content: "";
+    position: absolute;
+    left: 8px;
+    right: 8px;
+    bottom: 6px;
+    height: 3px;
+    border-radius: 2px;
+    background: v.$color-success;
+    /* soft glow for visibility on dark background */
+    box-shadow: 0 0 0 1px rgba(164,232,160,0.35);
+    pointer-events: none;
+  }
+}
