@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import styles from "./nginx.module.scss";
 
 type ProxyType = "PROXY" | "REDIRECT";
@@ -67,10 +67,27 @@ export default function NginxManagement() {
   const [searchCol, setSearchCol] = useState<SortKey>("domains");
   const [search, setSearch] = useState("");
 
+  // Logs
+  const [showLogs, setShowLogs] = useState(false);
+  const [logs, setLogs] = useState<string[]>([]);
+  const [reloading, setReloading] = useState(false);
+
+  // Toast
+  const [toast, setToast] = useState<{ message: string; type: "success" | "error" | "info" } | null>(null);
+  const showToast = (message: string, type: "success" | "error" | "info" = "success") => {
+    setToast({ message, type });
+    // auto-clear matches animation length in CSS (3s visible + in/out)
+    setTimeout(() => setToast(null), 3200);
+  };
+
   // Modal textarea refs for autogrow
   const domainsRef = useRef<HTMLTextAreaElement>(null);
   const hostRef = useRef<HTMLTextAreaElement>(null);
   const codeRef = useRef<HTMLTextAreaElement>(null);
+
+  // Logs container ref + autoscroll control
+  const logsPreRef = useRef<HTMLPreElement>(null);
+  const [autoScroll, setAutoScroll] = useState(true);
 
   useAutoGrowTextarea(domainsRef, editing?.domains ?? "");
   useAutoGrowTextarea(hostRef, editing?.proxy_pass_host ?? "");
@@ -152,76 +169,174 @@ export default function NginxManagement() {
     }
   };
 
-  let filteredEntries = entries;
-  if (search.trim() !== "") {
-    filteredEntries = entries.filter(entry => {
+  const filteredEntries = useMemo(() => {
+    if (search.trim() === "") return entries;
+    return entries.filter(entry => {
       const val = entry[searchCol];
-      if (typeof val === "string") {
-        return val.toLowerCase().includes(search.toLowerCase());
-      }
+      if (typeof val === "string") return val.toLowerCase().includes(search.toLowerCase());
       if (typeof val === "boolean") {
-        return (search.toLowerCase() === "enabled" && val) ||
-               (search.toLowerCase() === "disabled" && !val);
+        return (search.toLowerCase() === "enabled" && val) || (search.toLowerCase() === "disabled" && !val);
       }
-      if (typeof val === "number") {
-        return String(val).includes(search);
-      }
+      if (typeof val === "number") return String(val).includes(search);
       return false;
     });
-  }
+  }, [entries, search, searchCol]);
 
-  const sortedEntries = [...filteredEntries].sort((a, b) => compare(a[sortKey], b[sortKey], sortDir));
+  const sortedEntries = useMemo(() => {
+    return [...filteredEntries].sort((a, b) => compare(a[sortKey], b[sortKey], sortDir));
+  }, [filteredEntries, sortKey, sortDir]);
 
   const arrow = (key: SortKey) => {
-    if (sortKey !== key) return <span aria-hidden="true" style={{marginLeft: 4, opacity: 0.4}}>↕</span>;
+    if (sortKey !== key) return <span aria-hidden="true" style={{ marginLeft: 4, opacity: 0.4 }}>↕</span>;
     return sortDir === "asc"
-      ? <span aria-label="ascending" style={{marginLeft: 4}}>↑</span>
-      : <span aria-label="descending" style={{marginLeft: 4}}>↓</span>;
+      ? <span aria-label="ascending" style={{ marginLeft: 4 }}>↑</span>
+      : <span aria-label="descending" style={{ marginLeft: 4 }}>↓</span>;
+  };
+
+  // Parse upstream logs payloads supporting JSON {logs: string[]} and plain text
+  const parseLogPayload = (txt: string): string[] => {
+    try {
+      const data = JSON.parse(txt);
+      if (data && Array.isArray(data.logs)) {
+        return data.logs.flatMap((item: unknown) => String(item ?? "").replace(/\r\n/g, "\n").split("\n"));
+      }
+    } catch {
+      // not JSON
+    }
+    return txt.replace(/\r\n/g, "\n").split("\n");
+  };
+
+  // Reload + Logs via local proxy API
+  const fetchLogs = async () => {
+    try {
+      const res = await fetch("/api/nginx/logs?count=100", { cache: "no-store" });
+      const txt = await res.text();
+      const lines = parseLogPayload(txt).filter(Boolean);
+      setLogs(lines);
+    } catch {
+      // ignore transient errors
+    }
+  };
+
+  const onReload = async () => {
+    // Open logs immediately and start autoscrolling to bottom
+    setShowLogs(true);
+    setAutoScroll(true);
+    setReloading(true);
+    try {
+      const res = await fetch("/api/nginx/reload", { method: "POST" });
+      if (!res.ok) await fetch("/api/nginx/reload"); // fallback GET
+      showToast("Reload finished", "success");
+    } catch {
+      showToast("Reload request failed", "error");
+    } finally {
+      setReloading(false);
+    }
+  };
+
+  // Poll logs every 1s while the logs modal is open
+  useEffect(() => {
+    if (!showLogs) return;
+    let alive = true;
+    const tick = async () => {
+      if (!alive) return;
+      await fetchLogs();
+    };
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => {
+      alive = false;
+      clearInterval(id);
+    };
+  }, [showLogs]);
+
+  // Auto-scroll to bottom on new logs if user hasn't scrolled up
+  useEffect(() => {
+    if (!showLogs || !autoScroll) return;
+    const el = logsPreRef.current;
+    if (!el) return;
+    el.scrollTop = el.scrollHeight;
+  }, [logs, showLogs, autoScroll]);
+
+  // Track whether user scrolled away from bottom; if near bottom, keep auto-scroll enabled
+  const handleLogsScroll = () => {
+    const el = logsPreRef.current;
+    if (!el) return;
+    const distanceFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
+    setAutoScroll(distanceFromBottom < 40); // keep following if within 40px from bottom
+  };
+
+  const closeLogs = () => setShowLogs(false);
+
+  const classify = (line: string): string => {
+    const l = line.toLowerCase();
+    if (/\berror\b|\[error\]/i.test(line)) return styles.logError;
+    if (/\bwarn(ing)?\b|\[warn\]/i.test(line)) return styles.logWarn;
+    if (/\bnotice\b|\[notice\]/i.test(line)) return styles.logNotice;
+    if (/\binfo\b|\[info\]/i.test(line)) return styles.logInfo;
+    if (/\bdebug\b|\[debug\]/i.test(line)) return styles.logDebug;
+    if (l.includes("stderr")) return styles.logNotice;
+    return styles.logText;
   };
 
   return (
     <div className={styles.wrapper}>
       <h2 className={styles.heading}>Nginx Management</h2>
-      <div style={{display: "flex", alignItems: "center", gap: "1rem", marginBottom: "0.75rem", padding: "0 1.25rem"}}>
-        <button onClick={onCreate} className={`${styles.button} ${styles.primary}`}>Add Entry</button>
-        <label style={{fontWeight: 500, color: "var(--color-text, #fff)", fontSize: "1rem"}}>
-          Search:
-          <input
-            style={{
-              marginLeft: 8,
-              marginRight: 8,
-              padding: "0.45rem 0.6rem",
-              borderRadius: 8,
-              border: "1px solid rgba(255,255,255,0.06)",
-              background: "#23233a",
-              color: "#fff",
-              fontSize: "1rem"
-            }}
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            placeholder="Search..."
-          />
-        </label>
-        <label style={{fontWeight: 500, color: "var(--color-text, #fff)", fontSize: "1rem"}}>
-          in
-          <select
-            style={{
-              marginLeft: 8,
-              padding: "0.45rem 0.6rem",
-              borderRadius: 8,
-              border: "1px solid rgba(255,255,255,0.06)",
-              background: "#23233a",
-              color: "#fff",
-              fontSize: "1rem"
-            }}
-            value={searchCol}
-            onChange={e => setSearchCol(e.target.value as SortKey)}
+
+      <div className={styles.toolbar}>
+        <div className={styles.toolbarLeft}>
+          <button onClick={onCreate} className={`${styles.button} ${styles.primary}`}>Add Entry</button>
+          <label style={{ fontWeight: 500, color: "#fff", fontSize: "1rem" }}>
+            Search:
+            <input
+              style={{
+                marginLeft: 8,
+                marginRight: 8,
+                padding: "0.45rem 0.6rem",
+                borderRadius: 8,
+                border: "1px solid rgba(255,255,255,0.06)",
+                background: "#23233a",
+                color: "#fff",
+                fontSize: "1rem"
+              }}
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              placeholder="Search..."
+            />
+          </label>
+          <label style={{ fontWeight: 500, color: "#fff", fontSize: "1rem" }}>
+            in
+            <select
+              style={{
+                marginLeft: 8,
+                padding: "0.45rem 0.6rem",
+                borderRadius: 8,
+                border: "1px solid rgba(255,255,255,0.06)",
+                background: "#23233a",
+                color: "#fff",
+                fontSize: "1rem"
+              }}
+              value={searchCol}
+              onChange={e => setSearchCol(e.target.value as SortKey)}
+            >
+              {sortOptions.map(opt => (
+                <option key={opt.key} value={opt.key}>{opt.label}</option>
+              ))}
+            </select>
+          </label>
+        </div>
+
+        <div className={styles.toolbarRight}>
+          <button
+            onClick={onReload}
+            disabled={reloading}
+            className={`${styles.reload}`}
+            aria-label="Reload server and view live logs"
+            title="Reload and show live logs"
           >
-            {sortOptions.map(opt => (
-              <option key={opt.key} value={opt.key}>{opt.label}</option>
-            ))}
-          </select>
-        </label>
+            {reloading ? "Reloading..." : "Reload & Show Logs"}
+          </button>
+        </div>
       </div>
 
       <div className={styles.tableOuterPad}>
@@ -248,11 +363,11 @@ export default function NginxManagement() {
               {sortedEntries.map((entry) => (
                 <tr key={entry.id}>
                   <td>{entry.id}</td>
-                  <td style={{whiteSpace:"pre-line"}}>{entry.domains}</td>
-                  <td style={{whiteSpace:"pre-line"}}>{entry.proxy_pass_host}</td>
+                  <td style={{ whiteSpace: "pre-line" }}>{entry.domains}</td>
+                  <td style={{ whiteSpace: "pre-line" }}>{entry.proxy_pass_host}</td>
                   <td>{entry.type}</td>
                   <td>
-                    <SslSwitch checked={entry.ssl} id={`ssl-switch-${entry.id}`} onChange={() => {}} />
+                    <SslSwitch checked={entry.ssl} id={`ssl-switch-${entry.id}`} onChange={() => { }} />
                   </td>
                   <td>
                     <button
@@ -274,7 +389,7 @@ export default function NginxManagement() {
               ))}
               {sortedEntries.length === 0 && (
                 <tr>
-                  <td colSpan={sortOptions.length + 2} style={{textAlign:"center", color: "#AAA"}}>No entries found.</td>
+                  <td colSpan={sortOptions.length + 2} style={{ textAlign: "center", color: "#AAA" }}>No entries found.</td>
                 </tr>
               )}
             </tbody>
@@ -383,6 +498,42 @@ export default function NginxManagement() {
                 Delete
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {showLogs && (
+        <div className={styles.modalOverlay} role="dialog" aria-modal="true">
+          <div className={styles.logsModal}>
+            <div className={styles.logsHeader}>
+              <h3 style={{ margin: 0 }}>Reloading Nginx — Live Logs</h3>
+              <button
+                onClick={closeLogs}
+                className={`${styles.button} ${styles.neutral}`}
+                aria-label="Close logs"
+              >
+                Close
+              </button>
+            </div>
+            <pre
+              ref={logsPreRef}
+              className={styles.logsContainer}
+              aria-live="polite"
+              role="log"
+              onScroll={handleLogsScroll}
+            >
+              {logs.map((line, i) => (
+                <span key={i} className={classify(line)}>{line + "\n"}</span>
+              ))}
+            </pre>
+          </div>
+        </div>
+      )}
+
+      {toast && (
+        <div className={styles.toastViewport} role="status" aria-live="polite">
+          <div className={`${styles.toast} ${toast.type === "success" ? styles.toastSuccess : toast.type === "error" ? styles.toastError : styles.toastInfo}`}>
+            {toast.message}
           </div>
         </div>
       )}
