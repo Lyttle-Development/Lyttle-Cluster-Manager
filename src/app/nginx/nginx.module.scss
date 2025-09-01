@@ -2,7 +2,7 @@
 
 .wrapper {
   margin: 2rem auto 0 auto;
-  max-width: 900px;
+  width: 100%;
   background: v.$color-background;
   border-radius: 0.75rem;
   box-shadow: 0 2px 16px 0 rgba(0,0,0,0.14);
@@ -13,108 +13,150 @@
 .heading {
   font-size: 1.7rem;
   font-weight: 600;
-  margin-bottom: 2rem;
+  margin-bottom: 1.25rem;
+}
+
+/* Keep content away from window edges without causing horizontal scroll */
+.tableOuterPad {
+  width: 100%;
+  padding: 0 1.25rem; /* matches app main padding */
+  box-sizing: border-box;
 }
 
 .tableWrap {
   width: 100%;
-  overflow-x: unset;
+  overflow-x: hidden; /* prevent bottom scrollbar */
 }
 
 .table {
   width: 100%;
   border-collapse: collapse;
   margin-bottom: 1rem;
+  table-layout: auto;
   th, td {
     border: 1px solid v.$color-border;
-    padding: 0.85rem 1.2rem;
+    padding: 0.9rem 1.1rem;
     text-align: left;
     background: v.$color-background;
     color: v.$color-text-primary;
     font-size: 1rem;
     line-height: 1.5;
+    vertical-align: top;
+    word-break: break-word;
+    white-space: pre-line; /* show multi-line domains/hosts */
   }
   th {
     background: #23233a;
     color: v.$color-text-primary;
     font-weight: 700;
     letter-spacing: 0.02em;
+    user-select: none;
   }
   tr {
     &:hover {
       background: #23233a;
     }
   }
-  td, th {
-    max-width: 250px;
-    word-break: break-word;
-  }
 }
 
-.add {
-  padding: 0.5rem 1.4rem;
-  border-radius: 0.5rem;
-  border: none;
-  background: v.$color-success;
-  color: #121212;
-  font-weight: 600;
-  cursor: pointer;
-  margin-bottom: 1.5rem;
-  font-size: 1rem;
-  transition: background 0.15s;
-  &:focus {
-    outline: 2px solid v.$color-success;
-    outline-offset: 2px;
-  }
-  &:hover {
-    background: #94e293;
-  }
-}
-
+/* Buttons — unified base + variants so Cancel/Delete match Edit/Save */
 .button {
-  padding: 0.4rem 1rem;
+  padding: 0.48rem 1.1rem;
   border-radius: 0.5rem;
   border: none;
-  background: v.$color-border;
+  background: #23233a;
   color: v.$color-text-primary;
   cursor: pointer;
-  font-weight: 500;
-  font-size: 1rem;
-  transition: background 0.15s;
-  &:focus {
-    outline: 2px solid v.$color-success;
-    outline-offset: 2px;
+  font-weight: 600;
+  font-size: 0.98rem;
+  margin: 0 0.15rem;
+  transition: background 0.15s, color 0.15s, transform 0.05s;
+  outline: none;
+  &:hover, &:focus {
+    background: rgba(255,255,255,0.10);
+    color: v.$color-text-primary;
   }
-  &:hover {
-    background: #22223b;
+  &:active {
+    transform: translateY(1px);
   }
 }
 
-.delete {
+/* Primary action (Add, Save) */
+.primary {
+  background: v.$color-success;
+  color: #121212;
+  &:hover, &:focus {
+    background: #A4E8A0;
+    color: #23233a;
+  }
+}
+
+/* Subtle/neutral (Edit, Cancel) */
+.neutral {
+  /* inherits .button look */
+}
+
+/* Destructive (Delete) */
+.danger {
   background: v.$color-error;
-  color: #fff;
-  &:focus {
-    outline: 2px solid v.$color-error;
-    outline-offset: 2px;
-  }
-  &:hover {
+  color: #121212;
+  &:hover, &:focus {
     background: #ee888e;
+    color: #23233a;
   }
 }
 
-.cancel {
-  background: v.$color-border;
-  color: v.$color-text-secondary;
-  &:focus {
-    outline: 2px solid v.$color-warning;
-    outline-offset: 2px;
+/* Top "Add Entry" button uses primary style */
+.add {
+  @extend .button;
+  @extend .primary;
+  margin-bottom: 0.75rem;
+}
+
+/* SSL switch */
+.switch {
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+  user-select: none;
+  .track {
+    width: 2.2rem;
+    height: 1.2rem;
+    background: v.$color-border;
+    border-radius: 1.2rem;
+    position: relative;
+    transition: background 0.18s;
+    margin-right: 0.5rem;
   }
-  &:hover {
+  .thumb {
+    position: absolute;
+    top: 0.16rem;
+    left: 0.16rem;
+    width: 0.88rem;
+    height: 0.88rem;
+    border-radius: 50%;
+    background: v.$color-success;
+    transition: left 0.18s, background 0.18s;
+  }
+  input:checked + .track {
+    background: v.$color-success;
+  }
+  input:checked + .track .thumb {
+    left: 1.16rem;
     background: #23233a;
-    color: v.$color-success;
+  }
+  input {
+    display: none;
+  }
+  .label {
+    color: v.$color-text-primary;
+    margin-left: 0.35rem;
+    font-size: 1rem;
+    font-weight: 500;
   }
 }
 
+/* Modal */
 .modalOverlay {
   position: fixed;
   z-index: 1100;
@@ -124,44 +166,60 @@
   align-items: center;
   justify-content: center;
 }
+
 .modal {
   background: v.$color-background;
-  border-radius: 0.75rem;
+  border-radius: 0.95rem;
   box-shadow: 0 4px 32px 0 rgba(0,0,0,0.22);
-  padding: 2rem;
-  min-width: 340px;
+  padding: 2rem 2rem 1.25rem;
+  width: clamp(420px, 92vw, 680px); /* bigger, responsive, no overflow */
   display: flex;
   flex-direction: column;
   gap: 1.1rem;
   color: v.$color-text-primary;
+
   label {
     display: flex;
     flex-direction: column;
-    gap: 0.4rem;
-    font-size: 1rem;
+    gap: 0.45rem;
+    font-size: 1.05rem;
     font-weight: 500;
+    align-items: flex-start;
+
     input, select, textarea {
-      border-radius: 0.4rem;
+      border-radius: 0.5rem;
       border: 1px solid v.$color-border;
-      padding: 0.5rem 0.75rem;
+      padding: 0.6rem 0.8rem;
       background: #23233a;
       color: v.$color-text-primary;
       font-size: 1rem;
-      margin-top: 0.25rem;
+      width: 100%;
+      outline: none;
+      transition: border 0.18s;
+      text-align: left;
+      box-sizing: border-box;
       &:focus {
-        outline: 2px solid v.$color-success;
-        outline-offset: 1px;
+        border-color: v.$color-success;
       }
     }
+
+    /* Auto-grow multiline, no scrollbars */
     textarea {
-      min-height: 2.5rem;
-      resize: vertical;
+      min-height: 3.25rem;
+      max-height: 60vh;
+      resize: none;
+      overflow-y: hidden;
+      white-space: pre-line;
+      word-break: break-word;
     }
   }
 }
+
 .modalActions {
   display: flex;
-  gap: 1rem;
+  flex-direction: row;
   justify-content: flex-end;
-  margin-top: 1.5rem;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
 }

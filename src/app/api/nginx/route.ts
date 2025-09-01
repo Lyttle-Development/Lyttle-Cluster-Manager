@@ -1,14 +1,24 @@
 import {NextRequest, NextResponse} from 'next/server';
 import {PrismaClient} from '@prisma/client';
+import {checkToken} from '@/app/api/auth/token';
+import {checkGoogle} from '@/app/api/auth/google';
 
 const prisma = new PrismaClient();
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+    if (!checkToken(request) && !await checkGoogle()) {
+        return NextResponse.json({error: 'Unauthorized'}, {status: 401});
+    }
+
     const entries = await prisma.proxyEntry.findMany();
     return NextResponse.json(entries);
 }
 
 export async function POST(request: NextRequest) {
+    if (!checkToken(request) && !await checkGoogle()) {
+        return NextResponse.json({error: 'Unauthorized'}, {status: 401});
+    }
+
     const data = await request.json();
     if (data.id) {
         const entry = await prisma.proxyEntry.update({
@@ -36,6 +46,10 @@ export async function POST(request: NextRequest) {
 }
 
 export async function DELETE(request: NextRequest) {
+    if (!checkToken(request) && !await checkGoogle()) {
+        return NextResponse.json({error: 'Unauthorized'}, {status: 401});
+    }
+
     const data = await request.json();
     if (!data.id) {
         return NextResponse.json({error: 'Missing id'}, {status: 400});
