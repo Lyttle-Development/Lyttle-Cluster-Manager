@@ -1,0 +1,167 @@
+@use "~@/styles/variables.scss" as v;
+
+.wrapper {
+  margin: 2rem auto 0 auto;
+  max-width: 900px;
+  background: v.$color-background;
+  border-radius: 0.75rem;
+  box-shadow: 0 2px 16px 0 rgba(0,0,0,0.14);
+  padding: 2rem;
+  color: v.$color-text-primary;
+}
+
+.heading {
+  font-size: 1.7rem;
+  font-weight: 600;
+  margin-bottom: 2rem;
+}
+
+.tableWrap {
+  width: 100%;
+  overflow-x: unset;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 1rem;
+  th, td {
+    border: 1px solid v.$color-border;
+    padding: 0.85rem 1.2rem;
+    text-align: left;
+    background: v.$color-background;
+    color: v.$color-text-primary;
+    font-size: 1rem;
+    line-height: 1.5;
+  }
+  th {
+    background: #23233a;
+    color: v.$color-text-primary;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+  }
+  tr {
+    &:hover {
+      background: #23233a;
+    }
+  }
+  td, th {
+    max-width: 250px;
+    word-break: break-word;
+  }
+}
+
+.add {
+  padding: 0.5rem 1.4rem;
+  border-radius: 0.5rem;
+  border: none;
+  background: v.$color-success;
+  color: #121212;
+  font-weight: 600;
+  cursor: pointer;
+  margin-bottom: 1.5rem;
+  font-size: 1rem;
+  transition: background 0.15s;
+  &:focus {
+    outline: 2px solid v.$color-success;
+    outline-offset: 2px;
+  }
+  &:hover {
+    background: #94e293;
+  }
+}
+
+.button {
+  padding: 0.4rem 1rem;
+  border-radius: 0.5rem;
+  border: none;
+  background: v.$color-border;
+  color: v.$color-text-primary;
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 1rem;
+  transition: background 0.15s;
+  &:focus {
+    outline: 2px solid v.$color-success;
+    outline-offset: 2px;
+  }
+  &:hover {
+    background: #22223b;
+  }
+}
+
+.delete {
+  background: v.$color-error;
+  color: #fff;
+  &:focus {
+    outline: 2px solid v.$color-error;
+    outline-offset: 2px;
+  }
+  &:hover {
+    background: #ee888e;
+  }
+}
+
+.cancel {
+  background: v.$color-border;
+  color: v.$color-text-secondary;
+  &:focus {
+    outline: 2px solid v.$color-warning;
+    outline-offset: 2px;
+  }
+  &:hover {
+    background: #23233a;
+    color: v.$color-success;
+  }
+}
+
+.modalOverlay {
+  position: fixed;
+  z-index: 1100;
+  inset: 0;
+  background: rgba(0,0,0,0.22);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.modal {
+  background: v.$color-background;
+  border-radius: 0.75rem;
+  box-shadow: 0 4px 32px 0 rgba(0,0,0,0.22);
+  padding: 2rem;
+  min-width: 340px;
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+  color: v.$color-text-primary;
+  label {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    font-size: 1rem;
+    font-weight: 500;
+    input, select, textarea {
+      border-radius: 0.4rem;
+      border: 1px solid v.$color-border;
+      padding: 0.5rem 0.75rem;
+      background: #23233a;
+      color: v.$color-text-primary;
+      font-size: 1rem;
+      margin-top: 0.25rem;
+      &:focus {
+        outline: 2px solid v.$color-success;
+        outline-offset: 1px;
+      }
+    }
+    textarea {
+      min-height: 2.5rem;
+      resize: vertical;
+    }
+  }
+}
+.modalActions {
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+  margin-top: 1.5rem;
+}

@@ -8,3 +8,37 @@ datasource db {
   url      = env("DATABASE_URL")
   schemas  = ["public"]
 }
+
+model ProxyEntry {
+  id                Int       @id @default(autoincrement())
+  proxy_pass_host   String
+  domains           String // semicolon-separated list
+  nginx_custom_code String?
+  type              ProxyType @default(PROXY)
+  ssl               Boolean   @default(false)
+
+  @@schema("public")
+}
+
+enum ProxyType {
+  REDIRECT
+  PROXY
+
+  @@schema("public")
+}
+
+model Certificate {
+  id          String   @id @default(uuid())
+  domains     String // ';'-joined list of domains (e.g. "a.com;b.com")
+  domainsHash String // SHA256 hash of sorted split domains
+  certPem     String // Certificate PEM
+  keyPem      String // Private Key PEM
+  expiresAt   DateTime
+  issuedAt    DateTime
+  lastUsedAt  DateTime
+  isOrphaned  Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@schema("public")
+}
