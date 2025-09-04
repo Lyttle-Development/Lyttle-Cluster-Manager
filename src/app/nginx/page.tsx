@@ -220,7 +220,7 @@ export default function NginxManagement() {
     // Reload + Logs via local proxy API
     const fetchLogs = async () => {
         try {
-            const res = await fetch('/api/nginx/logs?count=100', {cache: 'no-store'});
+            const res = await fetch('/api/nginx/logs?count=9999', {cache: 'no-store'});
             const txt = await res.text();
             const lines = parseLogPayload(txt).filter(Boolean);
             setLogs(lines);
