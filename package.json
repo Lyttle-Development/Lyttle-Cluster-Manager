@@ -11,7 +11,7 @@
     "prisma:generate": "prisma generate",
     "prisma:dangerously-db-push": "prisma db push",
     "prisma:migrate": "prisma migrate dev --name merge-upstream",
-    "docker:setup": "npm run build",
+    "docker:setup": "npm run prisma:generate && npm run build",
     "docker:build": "docker build -t community-v3-dashboard .",
     "update": "npm update --save && npx npm-check-updates -u && npm install"
   },
