@@ -28,17 +28,58 @@ enum ProxyType {
 }
 
 model Certificate {
-  id          String   @id @default(uuid())
-  domains     String // ';'-joined list of domains (e.g. "a.com;b.com")
-  domainsHash String // SHA256 hash of sorted split domains
-  certPem     String // Certificate PEM
-  keyPem      String // Private Key PEM
-  expiresAt   DateTime
-  issuedAt    DateTime
-  lastUsedAt  DateTime
-  isOrphaned  Boolean  @default(false)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id            String    @id @default(uuid())
+  domains       String // ';'-joined list of domains (e.g. "a.com;b.com")
+  domainsHash   String // SHA256 hash of sorted split domains
+  certPem       String // Certificate PEM
+  keyPem        String // Private Key PEM
+  expiresAt     DateTime
+  issuedAt      DateTime
+  lastUsedAt    DateTime
+  isOrphaned    Boolean   @default(false)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  status        String    @default("active") // active, failed, pending
+  failureReason String?
+  retryAfter    DateTime?
+  failureCount  Int       @default(0)
+  issuedByNode  String?
 
+  @@unique([domainsHash])
+  @@index([domainsHash])
+  @@index([retryAfter])
+  @@schema("public")
+}
+
+model ClusterNode {
+  id            String   @id @default(uuid())
+  hostname      String
+  instanceId    String   @unique
+  ipAddress     String? // IP address of the node for direct communication
+  isLeader      Boolean  @default(false)
+  lastHeartbeat DateTime
+  version       String?
+  status        String   @default("active") // active, inactive, failed
+  metadata      Json?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([isLeader, lastHeartbeat])
+  @@index([hostname])
+  @@index([ipAddress])
+  @@schema("public")
+}
+
+model AcmeChallenge {
+  id        String   @id @default(uuid())
+  token     String   @unique // The challenge token (filename)
+  keyAuth   String // The key authorization (file content)
+  domain    String // Domain this challenge is for
+  createdAt DateTime @default(now())
+  expiresAt DateTime // Challenges expire after 1 hour
+
+  @@index([token])
+  @@index([domain])
+  @@index([expiresAt])
   @@schema("public")
 }

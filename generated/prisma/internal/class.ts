@@ -17,8 +17,8 @@ import type * as Prisma from "./prismaNamespace"
 
 const config: runtime.GetPrismaClientConfig = {
   "previewFeatures": [],
-  "clientVersion": "7.1.0",
-  "engineVersion": "ab635e6b9d606fa5c8fb8b1a7f909c3c3c1c98ba",
+  "clientVersion": "7.2.0",
+  "engineVersion": "0c8ef2ce45c83248ab3df073180d5eda9e8be7a3",
   "activeProvider": "postgresql",
   "inlineSchema": "generator client {\n  provider   = \"prisma-client\" // or `prisma-client-js`\n  output     = \"../generated/prisma\"\n  engineType = \"client\" // enable Prisma ORM without Rust\n}\n\ndatasource db {\n  provider = \"postgresql\"\n  schemas  = [\"public\"]\n}\n\nmodel ProxyEntry {\n  id                Int       @id @default(autoincrement())\n  proxy_pass_host   String\n  domains           String // semicolon-separated list\n  nginx_custom_code String?\n  type              ProxyType @default(PROXY)\n  ssl               Boolean   @default(false)\n\n  @@schema(\"public\")\n}\n\nenum ProxyType {\n  REDIRECT\n  PROXY\n\n  @@schema(\"public\")\n}\n\nmodel Certificate {\n  id          String   @id @default(uuid())\n  domains     String // ';'-joined list of domains (e.g. \"a.com;b.com\")\n  domainsHash String // SHA256 hash of sorted split domains\n  certPem     String // Certificate PEM\n  keyPem      String // Private Key PEM\n  expiresAt   DateTime\n  issuedAt    DateTime\n  lastUsedAt  DateTime\n  isOrphaned  Boolean  @default(false)\n  createdAt   DateTime @default(now())\n  updatedAt   DateTime @updatedAt\n\n  @@schema(\"public\")\n}\n",
   "runtimeDataModel": {
