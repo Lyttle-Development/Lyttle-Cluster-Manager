@@ -1,7 +1,11 @@
-@use "~@/styles/variables" as v;
+@use "../../../../styles/variables" as v;
 
 .icon_group {
   display: inline-flex;
   gap: 1rem;
   justify-content: center;
+}
+
+.osIcon {
+  width: 1.5rem;
 }

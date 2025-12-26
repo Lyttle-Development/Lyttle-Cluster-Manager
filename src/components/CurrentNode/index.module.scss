@@ -1,4 +1,4 @@
-@use "~@/styles/variables" as v;
+@use "../../styles/variables" as v;
 
 .currentNode {
   display: flex;
@@ -19,4 +19,8 @@
   .text {
     text-transform: uppercase;
   }
+}
+
+.node {
+  padding: 1rem;
 }

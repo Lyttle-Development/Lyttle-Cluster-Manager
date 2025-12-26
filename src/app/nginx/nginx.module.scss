@@ -1,11 +1,11 @@
-@use "~@/styles/variables.scss" as v;
+@use "../../styles/variables" as v;
 
 .wrapper {
   margin: 2rem auto 0 auto;
   width: 100%;
   background: v.$color-background;
   border-radius: 0.75rem;
-  box-shadow: 0 2px 16px 0 rgba(0,0,0,0.14);
+  box-shadow: 0 2px 16px 0 rgba(0, 0, 0, 0.14);
   padding: 2rem;
   color: v.$color-text-primary;
 }
@@ -25,11 +25,13 @@
   margin-bottom: 0.75rem;
   gap: 1rem;
 }
+
 .toolbarLeft {
   display: flex;
   align-items: center;
   gap: 1rem;
 }
+
 .toolbarRight {
   margin-left: auto;
 }
@@ -51,6 +53,7 @@
   border-collapse: collapse;
   margin-bottom: 1rem;
   table-layout: auto;
+
   th, td {
     border: 1px solid v.$color-border;
     padding: 0.9rem 1.1rem;
@@ -63,6 +66,7 @@
     word-break: break-word;
     white-space: pre-line;
   }
+
   th {
     background: #23233a;
     color: v.$color-text-primary;
@@ -70,6 +74,7 @@
     letter-spacing: 0.02em;
     user-select: none;
   }
+
   tr {
     &:hover {
       background: #23233a;
@@ -90,35 +95,45 @@
   margin: 0 0.15rem;
   transition: background 0.15s, color 0.15s, transform 0.05s;
   outline: none;
+
   &:hover, &:focus {
-    background: rgba(255,255,255,0.10);
+    background: rgba(255, 255, 255, 0.10);
     color: v.$color-text-primary;
   }
+
   &:active {
     transform: translateY(1px);
   }
 }
+
 .primary {
   background: v.$color-success;
   color: #121212;
+
   &:hover, &:focus {
     background: #A4E8A0;
     color: #23233a;
   }
 }
-.neutral { /* inherits base */ }
+
+.neutral { /* inherits base */
+}
+
 .danger {
   background: v.$color-error;
   color: #121212;
+
   &:hover, &:focus {
     background: #ee888e;
     color: #23233a;
   }
 }
+
 .add {
   @extend .button;
   @extend .primary;
 }
+
 .reload {
   @extend .button;
   @extend .primary;
@@ -130,6 +145,7 @@
   align-items: center;
   cursor: pointer;
   user-select: none;
+
   .track {
     width: 2.2rem;
     height: 1.2rem;
@@ -139,6 +155,7 @@
     transition: background 0.18s;
     margin-right: 0.5rem;
   }
+
   .thumb {
     position: absolute;
     top: 0.16rem;
@@ -149,16 +166,20 @@
     background: v.$color-success;
     transition: left 0.18s, background 0.18s;
   }
+
   input:checked + .track {
     background: v.$color-success;
   }
+
   input:checked + .track .thumb {
     left: 1.16rem;
     background: #23233a;
   }
+
   input {
     display: none;
   }
+
   .label {
     color: v.$color-text-primary;
     margin-left: 0.35rem;
@@ -172,7 +193,7 @@
   position: fixed;
   z-index: 1100;
   inset: 0;
-  background: rgba(0,0,0,0.22);
+  background: rgba(0, 0, 0, 0.22);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -181,7 +202,7 @@
 .modal {
   background: v.$color-background;
   border-radius: 0.95rem;
-  box-shadow: 0 4px 32px 0 rgba(0,0,0,0.22);
+  box-shadow: 0 4px 32px 0 rgba(0, 0, 0, 0.22);
   padding: 2rem 2rem 1.25rem;
   width: clamp(420px, 92vw, 680px);
   display: flex;
@@ -209,6 +230,7 @@
       transition: border 0.18s;
       text-align: left;
       box-sizing: border-box;
+
       &:focus {
         border-color: v.$color-success;
       }
@@ -238,7 +260,7 @@
 .logsModal {
   background: v.$color-background;
   border-radius: 0.95rem;
-  box-shadow: 0 4px 32px 0 rgba(0,0,0,0.22);
+  box-shadow: 0 4px 32px 0 rgba(0, 0, 0, 0.22);
   width: clamp(520px, 96vw, 1600px);
   max-height: 92vh;
   display: flex;
@@ -262,7 +284,7 @@
   font-size: 0.92rem;
   line-height: 1.4;
   padding: 1rem;
-  overflow-y: auto;   /* vertical scroll allowed */
+  overflow-y: auto; /* vertical scroll allowed */
   overflow-x: hidden; /* no horizontal scroll */
   white-space: pre-wrap; /* wrap lines and keep newlines */
   word-break: break-word;
@@ -271,12 +293,29 @@
 }
 
 /* Log colouring */
-.logError { color: v.$color-error; }
-.logWarn  { color: v.$color-warning; }
-.logNotice { color: #8be9fd; }
-.logInfo  { color: v.$color-text-secondary; }
-.logDebug { color: #8ab6ff; }
-.logText  { color: v.$color-text-primary; }
+.logError {
+  color: v.$color-error;
+}
+
+.logWarn {
+  color: v.$color-warning;
+}
+
+.logNotice {
+  color: #8be9fd;
+}
+
+.logInfo {
+  color: v.$color-text-secondary;
+}
+
+.logDebug {
+  color: #8ab6ff;
+}
+
+.logText {
+  color: v.$color-text-primary;
+}
 
 /* Toast */
 .toastViewport {
@@ -287,24 +326,47 @@
   transform: translateX(-50%);
   pointer-events: none;
 }
+
 .toast {
   pointer-events: auto;
   border-radius: 8px;
   padding: 0.6rem 0.9rem;
   font-weight: 600;
   font-size: 0.95rem;
-  box-shadow: 0 6px 24px rgba(0,0,0,0.35);
-  border: 1px solid rgba(255,255,255,0.08);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   animation: toast-in 140ms ease-out, toast-out 200ms ease-in 3s forwards;
 }
-.toastSuccess { background: #1f3d2a; color: #c7f7c0; }
-.toastError { background: #472228; color: #ffd7db; }
-.toastInfo { background: #283149; color: #d6e2ff; }
+
+.toastSuccess {
+  background: #1f3d2a;
+  color: #c7f7c0;
+}
+
+.toastError {
+  background: #472228;
+  color: #ffd7db;
+}
+
+.toastInfo {
+  background: #283149;
+  color: #d6e2ff;
+}
 
 @keyframes toast-in {
-  from { transform: translate(-50%, 10px); opacity: 0; }
-  to { transform: translate(-50%, 0px); opacity: 1; }
+  from {
+    transform: translate(-50%, 10px);
+    opacity: 0;
+  }
+  to {
+    transform: translate(-50%, 0px);
+    opacity: 1;
+  }
 }
+
 @keyframes toast-out {
-  to { opacity: 0; transform: translate(-50%, 10px); }
+  to {
+    opacity: 0;
+    transform: translate(-50%, 10px);
+  }
 }

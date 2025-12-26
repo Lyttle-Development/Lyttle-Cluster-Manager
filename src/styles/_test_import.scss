@@ -1,0 +1,2 @@
+@use "variables" as v;
+.test { background: v.$color-primary; color: v.$color-text-primary; }

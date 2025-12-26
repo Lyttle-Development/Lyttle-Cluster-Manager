@@ -7,8 +7,11 @@ const NGINX_API_KEY = process.env.NGINX_API_KEY || '';
 
 export async function POST(
     request: NextRequest,
-    {params}: { params: { id: string } }
+    context: any
 ) {
+    // Support both shapes: context.params may be a Promise or a plain object
+    const params = await (context?.params as any);
+
     if (!checkToken(request) && !await checkGoogle()) {
         return NextResponse.json({error: 'Unauthorized'}, {status: 401});
     }
@@ -36,4 +39,3 @@ export async function POST(
         );
     }
 }
-

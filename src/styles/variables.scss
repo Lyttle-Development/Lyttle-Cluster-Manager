@@ -7,3 +7,61 @@ $color-error: #EEAAAE;
 $color-text-primary: #FFF;
 $color-text-secondary: #AAA;
 $color-background: #181825;
+
+// Primary brand color (used as v.$color-primary and $color-primary)
+$color-primary: #3b82f6;
+
+// --- Placeholders for button styles used with @extend in modules ---
+%button {
+  padding: 0.625rem 1.25rem;
+  border-radius: 8px;
+  border: none;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+%button-primary {
+  @extend %button;
+  background: $color-primary;
+  color: #fff;
+}
+
+%button-neutral {
+  @extend %button;
+  background: rgba(255, 255, 255, 0.05);
+  color: $color-text-primary;
+}
+
+%button-danger {
+  @extend %button;
+  background: #e74c3c;
+  color: #fff;
+}
+
+%button-success {
+  @extend %button;
+  background: $color-success;
+  color: #121212;
+}
+
+// --- Backwards-compatible aliases / additional theme variables used across modules ---
+// Legacy short names used in many module files
+$text-primary: $color-text-primary;
+$text-secondary: $color-text-secondary;
+$card-bg: $color-background;
+
+// Spacing scale used in several module files
+$spacing-xl: 3rem;
+$spacing-lg: 2rem;
+$spacing-md: 1.5rem;
+$spacing-sm: 0.875rem;
+$spacing-xs: 0.5rem;
+
+// Extra legacy names
+$primary-color: $color-primary;
+$primary: $color-primary;
+
+// Export note: modules using @use "~@/styles/variables.scss" as v; will access namespaced vars like v.$color-primary
+// and legacy module files that reference un-namespaced vars (e.g. $text-primary) will resolve to the aliases above.

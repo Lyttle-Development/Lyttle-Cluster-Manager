@@ -7,8 +7,10 @@ const NGINX_API_KEY = process.env.NGINX_API_KEY || '';
 
 export async function GET(
     request: NextRequest,
-    {params}: { params: { id: string } }
+    context: any
 ) {
+    const params = await (context?.params as any);
+
     if (!checkToken(request) && !await checkGoogle()) {
         return NextResponse.json({error: 'Unauthorized'}, {status: 401});
     }
@@ -37,8 +39,10 @@ export async function GET(
 
 export async function DELETE(
     request: NextRequest,
-    {params}: { params: { id: string } }
+    context: any
 ) {
+    const params = await (context?.params as any);
+
     if (!checkToken(request) && !await checkGoogle()) {
         return NextResponse.json({error: 'Unauthorized'}, {status: 401});
     }
@@ -64,4 +68,3 @@ export async function DELETE(
         );
     }
 }
-
