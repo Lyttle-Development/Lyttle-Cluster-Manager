@@ -25,6 +25,12 @@
     "paths": {
       "@/*": [
         "./src/*"
+      ],
+      "@lyttle-development/ui": [
+        "./packages/design-framework/packages/ui/src/index.ts"
+      ],
+      "@lyttle-development/ui/*": [
+        "./packages/design-framework/packages/ui/src/*"
       ]
     }
   },
@@ -36,6 +42,8 @@
     ".next/dev/types/**/*.ts"
   ],
   "exclude": [
-    "lyttle-cluster-manager/node_modules"
+    "node_modules",
+    "packages/design-framework/apps",
+    "packages/design-framework/packages/ui/src/stories"
   ]
 }

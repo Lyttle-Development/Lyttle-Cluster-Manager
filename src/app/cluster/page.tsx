@@ -1,6 +1,19 @@
 'use client';
 import {useEffect, useState} from 'react';
-import styles from './page.module.scss';
+import {
+    Badge,
+    Button,
+    Card,
+    CardContent,
+    CardHeader,
+    CardTitle,
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@lyttle-development/ui';
 
 interface ClusterNode {
     id: string;
@@ -33,6 +46,17 @@ interface LeaderStatus {
     issues: string[];
 }
 
+const statusVariant = (status: string): 'success' | 'destructive' | 'warning' | 'secondary' => {
+    if (status === 'active') return 'success';
+    if (status === 'failed') return 'destructive';
+    if (status === 'inactive') return 'secondary';
+    return 'warning';
+};
+
+const healthVariant = (status: string): 'success' | 'warning' => {
+    return status === 'healthy' ? 'success' : 'warning';
+};
+
 export default function ClusterPage() {
     const [nodes, setNodes] = useState<ClusterNode[]>([]);
     const [stats, setStats] = useState<ClusterStats | null>(null);
@@ -56,21 +80,9 @@ export default function ClusterPage() {
                 fetch('/api/cluster/stats'),
                 fetch('/api/cluster/leader/status'),
             ]);
-
-            if (nodesRes.ok) {
-                const nodesData = await nodesRes.json();
-                setNodes(nodesData.nodes || []);
-            }
-
-            if (statsRes.ok) {
-                const statsData = await statsRes.json();
-                setStats(statsData);
-            }
-
-            if (leaderRes.ok) {
-                const leaderData = await leaderRes.json();
-                setLeaderStatus(leaderData);
-            }
+            if (nodesRes.ok) setNodes((await nodesRes.json()).nodes || []);
+            if (statsRes.ok) setStats(await statsRes.json());
+            if (leaderRes.ok) setLeaderStatus(await leaderRes.json());
         } catch (error) {
             console.error('Failed to refresh cluster data:', error);
         }
@@ -78,7 +90,7 @@ export default function ClusterPage() {
 
     useEffect(() => {
         refresh();
-        const interval = setInterval(refresh, 5000); // Refresh every 5 seconds
+        const interval = setInterval(refresh, 5000);
         return () => clearInterval(interval);
     }, []);
 
@@ -90,7 +102,7 @@ export default function ClusterPage() {
             const data = await res.json();
             showToast(`Cleanup complete: ${data.message}`, 'success');
             refresh();
-        } catch (error) {
+        } catch {
             showToast('Failed to cleanup stale nodes', 'error');
         } finally {
             setLoading(false);
@@ -105,7 +117,7 @@ export default function ClusterPage() {
             const data = await res.json();
             showToast(data.message, 'success');
             refresh();
-        } catch (error) {
+        } catch {
             showToast('Failed to enforce leader', 'error');
         } finally {
             setLoading(false);
@@ -120,35 +132,17 @@ export default function ClusterPage() {
             const data = await res.json();
             showToast(data.message, data.success ? 'success' : 'error');
             refresh();
-        } catch (error) {
+        } catch {
             showToast('Failed to ensure leader', 'error');
         } finally {
             setLoading(false);
         }
     };
 
-    const formatDate = (dateString: string) => {
-        return new Date(dateString).toLocaleString();
-    };
-
-    const getStatusBadge = (status: string) => {
-        const className = styles[status] || styles.inactive;
-        return <span
-            className={`${styles.statusBadge} ${className}`}>{status}</span>;
-    };
-
-    const getHealthStatus = (status: string) => {
-        const className = status === 'healthy' ? styles.healthy : styles.inconsistent;
-        return <span
-            className={`${styles.healthStatus} ${className}`}>{status}</span>;
-    };
+    const formatDate = (dateString: string) => new Date(dateString).toLocaleString();
 
     const timeSince = (dateString: string) => {
-        const now = new Date();
-        const then = new Date(dateString);
-        const diffMs = now.getTime() - then.getTime();
-        const diffSec = Math.floor(diffMs / 1000);
-
+        const diffSec = Math.floor((Date.now() - new Date(dateString).getTime()) / 1000);
         if (diffSec < 60) return `${diffSec}s ago`;
         if (diffSec < 3600) return `${Math.floor(diffSec / 60)}m ago`;
         if (diffSec < 86400) return `${Math.floor(diffSec / 3600)}h ago`;
@@ -156,181 +150,137 @@ export default function ClusterPage() {
     };
 
     return (
-        <div className={styles.wrapper}>
-            <h2 className={styles.heading}>Cluster Management</h2>
+        <div style={{padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1.5rem'}}>
+            <h2 style={{fontSize: '1.5rem', fontWeight: 700}}>Cluster Management</h2>
 
             {stats && (
-                <div className={styles.statsGrid}>
-                    <div className={styles.statCard}>
-                        <h3>Total Nodes</h3>
-                        <div className={styles.value}>{stats.totalNodes}</div>
-                    </div>
-                    <div className={styles.statCard}>
-                        <h3>Active Nodes</h3>
-                        <div className={styles.value}>{stats.activeNodes}</div>
-                        <div className={styles.label}>Online and responding
-                        </div>
-                    </div>
-                    <div className={styles.statCard}>
-                        <h3>Inactive Nodes</h3>
-                        <div
-                            className={styles.value}>{stats.inactiveNodes}</div>
-                        <div className={styles.label}>Offline or stale</div>
-                    </div>
-                    <div className={styles.statCard}>
-                        <h3>Failed Nodes</h3>
-                        <div className={styles.value}>{stats.failedNodes}</div>
-                        <div className={styles.label}>Marked as failed</div>
-                    </div>
+                <div style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(10rem, 1fr))', gap: '1rem'}}>
+                    {[
+                        {label: 'Total Nodes', value: stats.totalNodes},
+                        {label: 'Active Nodes', value: stats.activeNodes, sub: 'Online and responding'},
+                        {label: 'Inactive Nodes', value: stats.inactiveNodes, sub: 'Offline or stale'},
+                        {label: 'Failed Nodes', value: stats.failedNodes, sub: 'Marked as failed'},
+                    ].map(({label, value, sub}) => (
+                        <Card key={label}>
+                            <CardHeader>
+                                <CardTitle style={{fontSize: '0.875rem', fontWeight: 500, color: 'var(--muted-foreground)'}}>{label}</CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <p style={{fontSize: '2rem', fontWeight: 700, lineHeight: 1}}>{value}</p>
+                                {sub && <p style={{fontSize: '0.75rem', color: 'var(--muted-foreground)', marginTop: '0.25rem'}}>{sub}</p>}
+                            </CardContent>
+                        </Card>
+                    ))}
                 </div>
             )}
 
             {leaderStatus && (
-                <div className={styles.leaderCard}>
-                    <h3>
-                        Leader Status
-                        {getHealthStatus(leaderStatus.status)}
-                    </h3>
+                <Card>
+                    <CardHeader>
+                        <CardTitle style={{display: 'flex', alignItems: 'center', gap: '0.5rem'}}>
+                            Leader Status
+                            <Badge variant={healthVariant(leaderStatus.status)}>{leaderStatus.status}</Badge>
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent style={{display: 'flex', flexDirection: 'column', gap: '1rem'}}>
+                        {leaderStatus.dbLeader ? (
+                            <dl style={{display: 'grid', gridTemplateColumns: 'auto 1fr', gap: '0.25rem 1rem', alignItems: 'start'}}>
+                                <dt style={{color: 'var(--muted-foreground)', fontSize: '0.875rem'}}>Hostname</dt>
+                                <dd>{leaderStatus.dbLeader.hostname}</dd>
+                                <dt style={{color: 'var(--muted-foreground)', fontSize: '0.875rem'}}>Instance ID</dt>
+                                <dd style={{fontFamily: 'monospace', fontSize: '0.875rem'}}>{leaderStatus.dbLeader.instanceId}</dd>
+                                <dt style={{color: 'var(--muted-foreground)', fontSize: '0.875rem'}}>IP Address</dt>
+                                <dd>{leaderStatus.dbLeader.ipAddress || 'N/A'}</dd>
+                                <dt style={{color: 'var(--muted-foreground)', fontSize: '0.875rem'}}>Last Heartbeat</dt>
+                                <dd>{formatDate(leaderStatus.dbLeader.lastHeartbeat)} ({timeSince(leaderStatus.dbLeader.lastHeartbeat)})</dd>
+                                <dt style={{color: 'var(--muted-foreground)', fontSize: '0.875rem'}}>Status</dt>
+                                <dd><Badge variant={statusVariant(leaderStatus.dbLeader.status)}>{leaderStatus.dbLeader.status}</Badge></dd>
+                            </dl>
+                        ) : (
+                            <p style={{color: 'var(--muted-foreground)'}}>No active leader found</p>
+                        )}
 
-                    {leaderStatus.dbLeader ? (
-                        <dl>
-                            <dt>Hostname</dt>
-                            <dd>{leaderStatus.dbLeader.hostname}</dd>
+                        {leaderStatus.issues.length > 0 && (
+                            <div style={{padding: '0.75rem', background: 'color-mix(in oklab, var(--destructive) 10%, transparent)', borderRadius: 'var(--radius)'}}>
+                                <strong style={{color: 'var(--destructive)'}}>Issues Detected:</strong>
+                                <ul style={{margin: '0.5rem 0 0 1.25rem', color: 'var(--muted-foreground)'}}>
+                                    {leaderStatus.issues.map((issue, i) => (
+                                        <li key={i}>{issue.replace(/_/g, ' ')}</li>
+                                    ))}
+                                </ul>
+                            </div>
+                        )}
 
-                            <dt>Instance ID</dt>
-                            <dd>{leaderStatus.dbLeader.instanceId}</dd>
-
-                            <dt>IP Address</dt>
-                            <dd>{leaderStatus.dbLeader.ipAddress || 'N/A'}</dd>
-
-                            <dt>Last Heartbeat</dt>
-                            <dd>{formatDate(leaderStatus.dbLeader.lastHeartbeat)} ({timeSince(leaderStatus.dbLeader.lastHeartbeat)})</dd>
-
-                            <dt>Status</dt>
-                            <dd>{getStatusBadge(leaderStatus.dbLeader.status)}</dd>
-                        </dl>
-                    ) : (
-                        <p style={{color: 'var(--text-secondary)'}}>No active
-                            leader found</p>
-                    )}
-
-                    {leaderStatus.issues.length > 0 && (
-                        <div style={{
-                            marginTop: '16px',
-                            padding: '12px',
-                            background: 'rgba(231, 76, 60, 0.1)',
-                            borderRadius: '8px'
-                        }}>
-                            <strong style={{color: '#e74c3c'}}>Issues
-                                Detected:</strong>
-                            <ul style={{
-                                margin: '8px 0 0 20px',
-                                color: 'var(--text-secondary)'
-                            }}>
-                                {leaderStatus.issues.map((issue, i) => (
-                                    <li key={i}>{issue.replace(/_/g, ' ')}</li>
-                                ))}
-                            </ul>
+                        <div style={{display: 'flex', gap: '0.5rem', flexWrap: 'wrap'}}>
+                            <Button variant="secondary" onClick={handleCleanup} disabled={loading}>
+                                Cleanup Stale Nodes
+                            </Button>
+                            <Button variant="default" onClick={handleEnforceLeader} disabled={loading}>
+                                Enforce Single Leader
+                            </Button>
+                            <Button variant="outline" onClick={handleEnsureLeader} disabled={loading}>
+                                Ensure Leader Exists
+                            </Button>
                         </div>
-                    )}
-
-                    <div className={styles.adminActions}>
-                        <button
-                            onClick={handleCleanup}
-                            disabled={loading}
-                            className={`${styles.button} ${styles.neutral}`}
-                        >
-                            Cleanup Stale Nodes
-                        </button>
-                        <button
-                            onClick={handleEnforceLeader}
-                            disabled={loading}
-                            className={`${styles.button} ${styles.primary}`}
-                        >
-                            Enforce Single Leader
-                        </button>
-                        <button
-                            onClick={handleEnsureLeader}
-                            disabled={loading}
-                            className={`${styles.button} ${styles.success}`}
-                        >
-                            Ensure Leader Exists
-                        </button>
-                    </div>
-                </div>
+                    </CardContent>
+                </Card>
             )}
 
-            <div className={styles.toolbar}>
-                <h3 style={{color: 'var(--text-primary)', margin: 0}}>Cluster
-                    Nodes</h3>
-                <button
-                    onClick={refresh}
-                    className={`${styles.button} ${styles.neutral}`}
-                >
-                    Refresh
-                </button>
+            <div style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between'}}>
+                <h3 style={{margin: 0, fontSize: '1rem', fontWeight: 600}}>Cluster Nodes</h3>
+                <Button variant="secondary" onClick={refresh}>Refresh</Button>
             </div>
 
             {nodes.length === 0 ? (
-                <div className={styles.emptyState}>
-                    <p>No cluster nodes found</p>
-                </div>
+                <p style={{color: 'var(--muted-foreground)'}}>No cluster nodes found</p>
             ) : (
-                <div className={styles.tableOuterPad}>
-                    <div className={styles.tableWrap}>
-                        <table className={styles.table}>
-                            <thead>
-                            <tr>
-                                <th>Hostname</th>
-                                <th>Instance ID</th>
-                                <th>IP Address</th>
-                                <th>Status</th>
-                                <th>Leader</th>
-                                <th>Version</th>
-                                <th>Last Heartbeat</th>
-                            </tr>
-                            </thead>
-                            <tbody>
-                            {nodes.map((node) => (
-                                <tr key={node.id}>
-                                    <td>{node.hostname}</td>
-                                    <td style={{
-                                        fontFamily: 'Courier New, monospace',
-                                        fontSize: '0.875rem'
-                                    }}>
-                                        {node.instanceId}
-                                    </td>
-                                    <td>{node.ipAddress || '-'}</td>
-                                    <td>{getStatusBadge(node.status)}</td>
-                                    <td>
-                                        {node.isLeader && (
-                                            <span
-                                                className={styles.leaderIndicator}>Leader</span>
-                                        )}
-                                    </td>
-                                    <td>{node.version || '-'}</td>
-                                    <td>
-                                        {formatDate(node.lastHeartbeat)}
-                                        <br/>
-                                        <span style={{
-                                            color: 'var(--text-secondary)',
-                                            fontSize: '0.875rem'
-                                        }}>
-                                                ({timeSince(node.lastHeartbeat)})
-                                            </span>
-                                    </td>
-                                </tr>
-                            ))}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+                <Table>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead>Hostname</TableHead>
+                            <TableHead>Instance ID</TableHead>
+                            <TableHead>IP Address</TableHead>
+                            <TableHead>Status</TableHead>
+                            <TableHead>Leader</TableHead>
+                            <TableHead>Version</TableHead>
+                            <TableHead>Last Heartbeat</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {nodes.map((node) => (
+                            <TableRow key={node.id}>
+                                <TableCell>{node.hostname}</TableCell>
+                                <TableCell style={{fontFamily: 'monospace', fontSize: '0.875rem'}}>{node.instanceId}</TableCell>
+                                <TableCell>{node.ipAddress || '-'}</TableCell>
+                                <TableCell><Badge variant={statusVariant(node.status)}>{node.status}</Badge></TableCell>
+                                <TableCell>
+                                    {node.isLeader && <Badge variant="info">Leader</Badge>}
+                                </TableCell>
+                                <TableCell>{node.version || '-'}</TableCell>
+                                <TableCell>
+                                    {formatDate(node.lastHeartbeat)}
+                                    <br/>
+                                    <span style={{color: 'var(--muted-foreground)', fontSize: '0.875rem'}}>
+                                        ({timeSince(node.lastHeartbeat)})
+                                    </span>
+                                </TableCell>
+                            </TableRow>
+                        ))}
+                    </TableBody>
+                </Table>
             )}
 
             {toast && (
-                <div className={styles.toastViewport}>
-                    <div
-                        className={`${styles.toast} ${styles[`toast${toast.type.charAt(0).toUpperCase() + toast.type.slice(1)}`]}`}>
+                <div style={{position: 'fixed', bottom: '1.5rem', right: '1.5rem', zIndex: 9999}}>
+                    <div style={{
+                        padding: '0.75rem 1.25rem',
+                        borderRadius: 'var(--radius)',
+                        background: toast.type === 'success' ? 'var(--primary)' : toast.type === 'error' ? 'var(--destructive)' : 'var(--muted)',
+                        color: toast.type === 'success' ? 'var(--primary-foreground)' : 'var(--foreground)',
+                        boxShadow: 'var(--shadow-md)',
+                        fontSize: '0.875rem',
+                        fontWeight: 500,
+                    }}>
                         {toast.message}
                     </div>
                 </div>
@@ -338,4 +288,3 @@ export default function ClusterPage() {
         </div>
     );
 }
-

@@ -1,0 +1,12 @@
+// Import design framework global styles (tokens, themes, base resets, utilities)
+@use '../../packages/design-framework/packages/ui/src/styles/globals';
+
+// App-level overrides — keep the dark background gradient from the original design
+body {
+  background:
+    radial-gradient(82.49% 57.44% at 57.85% 100%, rgba(87, 191, 239, 0.02) 0%, rgba(239, 87, 214, 0.00) 100%),
+    radial-gradient(75.56% 75.54% at 0% 0%, rgba(87, 191, 239, 0.07) 0%, rgba(239, 87, 214, 0.00) 100%),
+    radial-gradient(59.81% 48.29% at 100% 0%, rgba(87, 191, 239, 0.10) 0%, rgba(239, 87, 214, 0.00) 100%),
+    var(--background);
+}
+

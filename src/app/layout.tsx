@@ -1,10 +1,8 @@
 import type {Metadata} from 'next';
 import {Poppins} from 'next/font/google';
-import '../styles/reset.scss';
-import '../styles/defaults.scss';
-import classNames from 'classnames';
-import styles from './layout.module.scss';
-import {MainNavigation} from '@/components/MainNavigation';
+import './globals.scss';
+import {SidebarProvider, SidebarInset} from '@lyttle-development/ui';
+import {AppSidebar} from '@/components/AppSidebar';
 import {checkGoogle} from '@/app/api/auth/google';
 
 const poppins = Poppins({
@@ -25,8 +23,8 @@ export default async function RootLayout({
 }>) {
     if (!await checkGoogle()) {
         return (
-            <html lang="en">
-            <body className={classNames(poppins.className, styles.body)}>
+            <html lang="en" className={`dark ${poppins.variable}`}>
+            <body>
             <p>You are not allowed to access this application.</p>
             </body>
             </html>
@@ -34,12 +32,14 @@ export default async function RootLayout({
     }
 
     return (
-        <html lang="en">
-        <body className={classNames(poppins.className, styles.body)}>
-        <MainNavigation/>
-        <main className={styles.main}>
-            {children}
-        </main>
+        <html lang="en" className={`dark ${poppins.variable}`}>
+        <body>
+        <SidebarProvider>
+            <AppSidebar/>
+            <SidebarInset>
+                {children}
+            </SidebarInset>
+        </SidebarProvider>
         </body>
         </html>
     );
