@@ -1,16 +1,25 @@
 'use client';
-import styles from './index.module.scss';
-import classNames from 'classnames';
-import {Icon} from '@/components/Icon';
 import {
-    faCog,
-    faRepeat,
-    faRoute,
-    faServer,
-    faStopwatch
-} from '@fortawesome/free-solid-svg-icons';
-import {faDocker} from '@fortawesome/free-brands-svg-icons';
-import {OsIcon} from '@/components/Icon/components/OsIcon';
+    Badge,
+    Button,
+    Card,
+    CardContent,
+    CardDescription,
+    CardFooter,
+    CardHeader,
+    CardTitle,
+    Inline,
+    Stack,
+    Text,
+} from '@lyttle-development/ui';
+import {
+    Boxes,
+    Gauge,
+    Network,
+    RefreshCcw,
+    Server,
+    Settings2,
+} from 'lucide-react';
 import {useNode} from '@/hooks/useNode';
 
 export interface NodeProps {
@@ -31,56 +40,87 @@ export function Node({host}: NodeProps) {
     }
 
     const formattedStatus = status.charAt(0).toUpperCase() + status.slice(1);
+    const statusVariant = status === 'running'
+        ? 'success'
+        : status === 'offline'
+            ? 'destructive'
+            : 'warning';
+    const canShowDetails = (status === 'running' || status === 'reloading') && !!node;
+    const osLabel = [cachedNode?.os?.name, cachedNode?.os?.version].filter(Boolean).join(' ');
+    const routesNginx = node?.containers.find((container) => container.name.includes('lyttle-nginx'));
+    const routesPortainer = node?.containers.find((container) => container.name.includes('portainer_portainer'));
 
     return (
-        <section className={styles.node}>
-            <article className={styles.heading}>
-                <h3 className={styles.hostname}>{hostname}</h3>
-                <span
-                    className={classNames(styles.status, {
-                        [styles.green]: status === 'running',
-                        [styles.red]: status === 'offline',
-                        [styles.yellow]: ['rebooting', 'loading', 'reloading'].includes(status),
-                    })}
-                    title={`Currently ${status}`}
-                />
-            </article>
-            <p className={styles.iconCombi}>
-                <Icon icon={faStopwatch} className={styles.icon}/>
-                <span>{node?.uptime?.up || formattedStatus}</span>
-            </p>
-            {(status === 'running' || status === 'reloading') && !!node && (
-                <>
-                    <p className={styles.iconCombi}>
-                        <Icon icon={faDocker} className={styles.icon}/>
-                        <span>{node?.containers?.length || '0'} active containers</span>
-                    </p>
-                    <section className={styles.quickActions}>
-                        <article className={styles.info}>
-                            <OsIcon os={node?.os?.id}
-                                    title={`Node is running ${cachedNode?.os?.name} ${cachedNode?.os?.version}`}/>
-                            {node?.containers.find((c) => c.name.includes('lyttle-nginx')) && (
-                                <Icon icon={faRoute}
-                                      title="Currently routes NGINX requests"></Icon>
-                            )}
-                            {node?.containers.find((c) => c.name.includes('portainer_portainer')) && (
-                                <Icon icon={faServer}
-                                      title="Currently routes Portainer UI requests"></Icon>
-                            )}
-                        </article>
-                        <article className={styles.actions}>
-                            <button
-                                onClick={() => sendCommand('reboot', 'rebooting')}
-                                title="Reboot">
-                                <Icon icon={faRepeat} className={styles.icon}/>
-                            </button>
-                            <button onClick={onSettings} title="Settings">
-                                <Icon icon={faCog} className={styles.icon}/>
-                            </button>
-                        </article>
-                    </section>
-                </>
-            )}
-        </section>
+        <Card>
+            <CardHeader>
+                <Inline justify="between" align="start" gap="sm" wrap={false}>
+                    <Stack gap="xs" align="start" style={{minWidth: 0, flex: 1}}>
+                        <CardTitle>{hostname}</CardTitle>
+                        <CardDescription>{host}</CardDescription>
+                    </Stack>
+                    <Badge variant={statusVariant} title={`Currently ${status}`}>
+                        {formattedStatus}
+                    </Badge>
+                </Inline>
+            </CardHeader>
+
+            <CardContent>
+                <Stack gap="sm" align="start">
+                    <Inline gap="xs" wrap={false}>
+                        <Gauge size={16} aria-hidden="true"/>
+                        <Text as="span" size="sm">{node?.uptime?.up || formattedStatus}</Text>
+                    </Inline>
+
+                    {canShowDetails && (
+                        <>
+                            <Inline gap="xs" wrap={false}>
+                                <Boxes size={16} aria-hidden="true"/>
+                                <Text as="span" size="sm">{node?.containers?.length || 0} active containers</Text>
+                            </Inline>
+
+                            <Inline gap="xs">
+                                {osLabel && <Badge variant="secondary">{osLabel}</Badge>}
+                                {routesNginx && (
+                                    <Badge variant="info">
+                                        <Inline as="span" gap="xs" wrap={false}>
+                                            <Network size={14} aria-hidden="true"/>
+                                            <span>Nginx router</span>
+                                        </Inline>
+                                    </Badge>
+                                )}
+                                {routesPortainer && (
+                                    <Badge variant="brand">
+                                        <Inline as="span" gap="xs" wrap={false}>
+                                            <Server size={14} aria-hidden="true"/>
+                                            <span>Portainer</span>
+                                        </Inline>
+                                    </Badge>
+                                )}
+                            </Inline>
+                        </>
+                    )}
+                </Stack>
+            </CardContent>
+
+            <CardFooter>
+                <Inline justify="between" gap="sm" style={{width: '100%'}}>
+                    <Text as="span" size="xs" tone="muted">Status updates poll automatically.</Text>
+                    <Inline gap="xs" wrap={false}>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => sendCommand('reboot', 'rebooting')}
+                            disabled={!canShowDetails}
+                        >
+                            <RefreshCcw size={16} aria-hidden="true"/>
+                            Reboot
+                        </Button>
+                        <Button variant="ghost" size="icon-sm" onClick={onSettings} title="Settings">
+                            <Settings2 size={16} aria-hidden="true"/>
+                        </Button>
+                    </Inline>
+                </Inline>
+            </CardFooter>
+        </Card>
     );
 }

@@ -25,15 +25,37 @@
     "paths": {
       "@/*": [
         "./src/*"
+      ],
+      "@lyttle-development/ui": [
+        "./packages/design-framework/packages/ui/src/index.ts"
+      ],
+      "@lyttle-development/ui/*": [
+        "./packages/design-framework/packages/ui/src/*"
+      ],
+      "react": [
+        "./node_modules/@types/react/index.d.ts"
+      ],
+      "react-dom": [
+        "./node_modules/@types/react-dom/index.d.ts"
+      ],
+      "react/jsx-runtime": [
+        "./node_modules/@types/react/jsx-runtime"
       ]
     }
   },
   "include": [
     "next-env.d.ts",
-    "**/*.ts",
-    "**/*.tsx",
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "generated/**/*.ts",
+    "generated/**/*.tsx",
+    "prisma/**/*.ts",
+    "prisma/**/*.tsx",
     ".next/types/**/*.ts",
-    ".next/dev/types/**/*.ts"
+    ".next/dev/types/**/*.ts",
+    "packages/design-framework/packages/ui/src/**/*.ts",
+    "packages/design-framework/packages/ui/src/**/*.tsx",
+    "packages/design-framework/packages/ui/src/**/*.d.ts"
   ],
   "exclude": [
     "lyttle-cluster-manager/node_modules"

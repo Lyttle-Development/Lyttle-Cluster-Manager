@@ -1,8 +1,7 @@
 import type {Metadata} from 'next';
 import {Poppins} from 'next/font/google';
-import '../styles/reset.scss';
-import '../styles/defaults.scss';
-import classNames from 'classnames';
+import './globals.scss';
+import {Container, Heading, Stack, Surface, Text, Toaster, TooltipProvider} from '@lyttle-development/ui';
 import styles from './layout.module.scss';
 import {MainNavigation} from '@/components/MainNavigation';
 import {checkGoogle} from '@/app/api/auth/google';
@@ -26,8 +25,18 @@ export default async function RootLayout({
     if (!await checkGoogle()) {
         return (
             <html lang="en">
-            <body className={classNames(poppins.className, styles.body)}>
-            <p>You are not allowed to access this application.</p>
+            <body className={`${poppins.className} ${styles.body}`}>
+            <Container className={styles.centered} size="md" padding="lg">
+                <Surface padding="lg" radius="xl" shadow="md">
+                    <Stack gap="sm" align="start">
+                        <Text as="p" size="sm" tone="muted" transform="uppercase">Access restricted</Text>
+                        <Heading size="2xl">You are not allowed to access this application.</Heading>
+                        <Text tone="muted">
+                            Sign in with an approved Google account to continue.
+                        </Text>
+                    </Stack>
+                </Surface>
+            </Container>
             </body>
             </html>
         );
@@ -35,11 +44,14 @@ export default async function RootLayout({
 
     return (
         <html lang="en">
-        <body className={classNames(poppins.className, styles.body)}>
-        <MainNavigation/>
-        <main className={styles.main}>
-            {children}
-        </main>
+        <body className={`${poppins.className} ${styles.body}`}>
+        <TooltipProvider>
+            <MainNavigation/>
+            <main id="main-content" className={styles.main}>
+                {children}
+            </main>
+            <Toaster/>
+        </TooltipProvider>
         </body>
         </html>
     );

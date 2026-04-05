@@ -1,0 +1,20 @@
+@use "../../packages/design-framework/packages/ui/src/styles/globals.scss";
+
+html,
+body {
+  min-height: 100%;
+}
+
+body {
+  background:
+    radial-gradient(82.49% 57.44% at 57.85% 100%, color-mix(in oklab, var(--brand) 8%, transparent) 0%, transparent 100%),
+    radial-gradient(75.56% 75.54% at 0% 0%, color-mix(in oklab, var(--accent) 10%, transparent) 0%, transparent 100%),
+    radial-gradient(59.81% 48.29% at 100% 0%, color-mix(in oklab, var(--brand) 12%, transparent) 0%, transparent 100%),
+    var(--background);
+  color: var(--foreground);
+}
+
+a {
+  color: inherit;
+}
+

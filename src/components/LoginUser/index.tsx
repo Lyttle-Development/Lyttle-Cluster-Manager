@@ -1,7 +1,13 @@
 import {getServerSession} from 'next-auth';
 import {authOptions} from '@/app/api/auth/[...nextauth]/options';
-import Image from 'next/image';
-import styles from './index.module.scss';
+import {Avatar, AvatarFallback, AvatarImage, Inline, Surface, Text} from '@lyttle-development/ui';
+
+function getInitials(name?: string | null, email?: string | null) {
+    const source = name?.trim() || email?.trim() || 'User';
+    const parts = source.split(/\s+/).filter(Boolean);
+
+    return parts.slice(0, 2).map((part) => part[0]?.toUpperCase() ?? '').join('');
+}
 
 export async function LoginUser() {
     // Get the session on the server
@@ -19,21 +25,17 @@ export async function LoginUser() {
     }
 
     return (
-        <section className={styles.loginUser}>
-            <article className={styles.details}>
-                <p className={styles.name}>{user?.name}</p>
-                <p className={styles.email}>{user?.email}</p>
-            </article>
-            <article className={styles.avatar}>
-                {user?.image && (
-                    <Image
-                        src={user.image}
-                        alt="User profile"
-                        height={50}
-                        width={50}
-                    />
-                )}
-            </article>
-        </section>
+        <Surface as="section" padding="sm" radius="xl" shadow="none" tone="secondary">
+            <Inline gap="sm" wrap={false}>
+                <div style={{display: 'grid', justifyItems: 'end'}}>
+                    <Text as="p" size="sm" weight="semibold">{user.name ?? 'Signed in'}</Text>
+                    {user.email && <Text as="p" size="xs" tone="muted">{user.email}</Text>}
+                </div>
+                <Avatar size="default">
+                    {user.image && <AvatarImage src={user.image} alt={`${user.name ?? 'User'} profile`}/>}
+                    <AvatarFallback>{getInitials(user.name, user.email)}</AvatarFallback>
+                </Avatar>
+            </Inline>
+        </Surface>
     );
 }

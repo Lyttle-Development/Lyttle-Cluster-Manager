@@ -1,0 +1,63 @@
+.shell {
+  display: grid;
+  gap: 1rem;
+}
+
+.topBar {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  backdrop-filter: blur(18px);
+  background: color-mix(in oklab, var(--background) 86%, transparent);
+  border-radius: 0;
+  border-left: none;
+  border-right: none;
+}
+
+.topBarInner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.topBarMeta {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+}
+
+.logo {
+  width: 9rem;
+  height: auto;
+}
+
+.navigation {
+  display: block;
+}
+
+.navLink {
+  display: inline-flex;
+  gap: 0.5rem;
+}
+
+.navLinkActive {
+  background: color-mix(in oklab, var(--brand) 14%, var(--card));
+  border-color: color-mix(in oklab, var(--brand) 32%, var(--border));
+  color: var(--foreground);
+}
+
+.navIcon {
+  width: 1rem;
+  height: 1rem;
+}
+

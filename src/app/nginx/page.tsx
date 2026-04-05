@@ -1,5 +1,40 @@
 'use client';
 import {RefObject, useEffect, useMemo, useRef, useState} from 'react';
+import {
+    Badge,
+    Button,
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
+    Container,
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+    Empty,
+    Field,
+    Heading,
+    Inline,
+    Input,
+    NativeSelect,
+    Stack,
+    Surface,
+    Switch,
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+    Text,
+    Textarea,
+} from '@lyttle-development/ui';
+import {ArrowDown, ArrowUp, ArrowUpDown, Plus, RefreshCcw, Search} from 'lucide-react';
+import {toast} from 'sonner';
 import styles from './nginx.module.scss';
 
 type ProxyType = 'PROXY' | 'REDIRECT';
@@ -72,17 +107,6 @@ export default function NginxManagement() {
     const [logs, setLogs] = useState<string[]>([]);
     const [reloading, setReloading] = useState(false);
 
-    // Toast
-    const [toast, setToast] = useState<{
-        message: string;
-        type: 'success' | 'error' | 'info'
-    } | null>(null);
-    const showToast = (message: string, type: 'success' | 'error' | 'info' = 'success') => {
-        setToast({message, type});
-        // auto-clear matches animation length in CSS (3s visible + in/out)
-        setTimeout(() => setToast(null), 3200);
-    };
-
     // Modal textarea refs for autogrow
     const domainsRef = useRef<HTMLTextAreaElement>(null);
     const hostRef = useRef<HTMLTextAreaElement>(null);
@@ -96,10 +120,21 @@ export default function NginxManagement() {
     useAutoGrowTextarea(hostRef, editing?.proxy_pass_host ?? '');
     useAutoGrowTextarea(codeRef, editing?.nginx_custom_code ?? '');
 
-    const refresh = () =>
-        fetch('/api/nginx')
-            .then((res) => res.json())
-            .then(setEntries);
+    const refresh = async () => {
+        try {
+            const response = await fetch('/api/nginx', {cache: 'no-store'});
+
+            if (!response.ok) {
+                toast.error('Failed to load proxy entries');
+                return;
+            }
+
+            setEntries(await response.json());
+        } catch (error) {
+            console.error('Failed to load proxy entries:', error);
+            toast.error('Failed to load proxy entries');
+        }
+    };
 
     useEffect(() => {
         refresh();
@@ -115,56 +150,78 @@ export default function NginxManagement() {
     };
 
     const onSave = async () => {
+        if (!editing) return;
+
         setLoading(true);
-        await fetch('/api/nginx', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify(editing),
-        });
-        setEditing(null);
-        setLoading(false);
-        refresh();
+
+        try {
+            const response = await fetch('/api/nginx', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(editing),
+            });
+
+            if (!response.ok) {
+                toast.error('Failed to save proxy entry');
+                return;
+            }
+
+            toast.success(editing.id ? 'Proxy entry updated' : 'Proxy entry created');
+            setEditing(null);
+            await refresh();
+        } catch (error) {
+            console.error('Failed to save proxy entry:', error);
+            toast.error('Failed to save proxy entry');
+        } finally {
+            setLoading(false);
+        }
     };
 
     const onDelete = async (id: number) => {
-        if (!confirm('Delete this entry?')) return;
+        if (!window.confirm('Delete this entry?')) return;
+
         setLoading(true);
-        await fetch('/api/nginx', {
-            method: 'DELETE',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({id}),
-        });
-        setLoading(false);
-        refresh();
+        try {
+            const response = await fetch('/api/nginx', {
+                method: 'DELETE',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({id}),
+            });
+
+            if (!response.ok) {
+                toast.error('Failed to delete proxy entry');
+                return;
+            }
+
+            toast.success('Proxy entry deleted');
+            if (editing?.id === id) {
+                setEditing(null);
+            }
+            await refresh();
+        } catch (error) {
+            console.error('Failed to delete proxy entry:', error);
+            toast.error('Failed to delete proxy entry');
+        } finally {
+            setLoading(false);
+        }
     };
 
-    // Accessible light switch for SSL
-    function SslSwitch({
-                           checked,
-                           onChange,
-                           id
-                       }: {
-        checked: boolean,
-        onChange: (val: boolean) => void,
-        id: string
-    }) {
+    function SortIndicator({column}: {column: SortKey}) {
+        if (sortKey !== column) {
+            return <ArrowUpDown size={14} aria-hidden="true"/>;
+        }
+
+        return sortDir === 'asc'
+            ? <ArrowUp size={14} aria-label="ascending"/>
+            : <ArrowDown size={14} aria-label="descending"/>;
+    }
+
+    function SslDisplay({checked}: {checked: boolean}) {
         return (
-            <label className={styles.switch} htmlFor={id}>
-                <input
-                    type="checkbox"
-                    role="switch"
-                    aria-checked={checked}
-                    id={id}
-                    checked={checked}
-                    onChange={e => onChange(e.target.checked)}
-                    tabIndex={0}
-                />
-                <span className={styles.track}>
-          <span className={styles.thumb}/>
-        </span>
-                <span
-                    className={styles.label}>{checked ? 'Enabled' : 'Disabled'}</span>
-            </label>
+            <Inline gap="xs" wrap={false}>
+                <Switch checked={checked} disabled aria-label={checked ? 'SSL enabled' : 'SSL disabled'}/>
+                <Text as="span" size="sm">{checked ? 'Enabled' : 'Disabled'}</Text>
+            </Inline>
         );
     }
 
@@ -185,24 +242,13 @@ export default function NginxManagement() {
             if (typeof val === 'boolean') {
                 return (search.toLowerCase() === 'enabled' && val) || (search.toLowerCase() === 'disabled' && !val);
             }
-            if (typeof val === 'number') return String(val).includes(search);
-            return false;
+            return String(val).includes(search);
         });
     }, [entries, search, searchCol]);
 
     const sortedEntries = useMemo(() => {
         return [...filteredEntries].sort((a, b) => compare(a[sortKey], b[sortKey], sortDir));
     }, [filteredEntries, sortKey, sortDir]);
-
-    const arrow = (key: SortKey) => {
-        if (sortKey !== key) return <span aria-hidden="true" style={{
-            marginLeft: 4,
-            opacity: 0.4
-        }}>↕</span>;
-        return sortDir === 'asc'
-            ? <span aria-label="ascending" style={{marginLeft: 4}}>↑</span>
-            : <span aria-label="descending" style={{marginLeft: 4}}>↓</span>;
-    };
 
     // Parse upstream logs payloads supporting JSON {logs: string[]} and plain text
     const parseLogPayload = (txt: string): string[] => {
@@ -237,9 +283,9 @@ export default function NginxManagement() {
         try {
             const res = await fetch('/api/nginx/reload', {method: 'POST'});
             if (!res.ok) await fetch('/api/nginx/reload'); // fallback GET
-            showToast('Reload finished', 'success');
+            toast.success('Reload finished');
         } catch {
-            showToast('Reload request failed', 'error');
+            toast.error('Reload request failed');
         } finally {
             setReloading(false);
         }
@@ -281,300 +327,251 @@ export default function NginxManagement() {
 
     const classify = (line: string): string => {
         const l = line.toLowerCase();
-        if (/\berror\b|\[error\]/i.test(line)) return styles.logError;
-        if (/\bwarn(ing)?\b|\[warn\]/i.test(line)) return styles.logWarn;
-        if (/\bnotice\b|\[notice\]/i.test(line)) return styles.logNotice;
-        if (/\binfo\b|\[info\]/i.test(line)) return styles.logInfo;
-        if (/\bdebug\b|\[debug\]/i.test(line)) return styles.logDebug;
+        if (/\berror\b|\[error]/i.test(line)) return styles.logError;
+        if (/\bwarn(ing)?\b|\[warn]/i.test(line)) return styles.logWarn;
+        if (/\bnotice\b|\[notice]/i.test(line)) return styles.logNotice;
+        if (/\binfo\b|\[info]/i.test(line)) return styles.logInfo;
+        if (/\bdebug\b|\[debug]/i.test(line)) return styles.logDebug;
         if (l.includes('stderr')) return styles.logNotice;
         return styles.logText;
     };
 
     return (
-        <div className={styles.wrapper}>
-            <h2 className={styles.heading}>Nginx Management</h2>
+        <Container size="7xl" padding="lg">
+            <Stack gap="lg" align="start">
+                <Stack gap="xs" align="start">
+                    <Heading size="3xl">Proxy management</Heading>
+                    <Text tone="muted">
+                        Manage Nginx proxy and redirect entries, search the current routing table, and watch live reload output.
+                    </Text>
+                </Stack>
 
-            <div className={styles.toolbar}>
-                <div className={styles.toolbarLeft}>
-                    <button onClick={onCreate}
-                            className={`${styles.button} ${styles.primary}`}>Add
-                        Entry
-                    </button>
-                    <label style={{
-                        fontWeight: 500,
-                        color: '#fff',
-                        fontSize: '1rem'
-                    }}>
-                        Search:
-                        <input
-                            style={{
-                                marginLeft: 8,
-                                marginRight: 8,
-                                padding: '0.45rem 0.6rem',
-                                borderRadius: 8,
-                                border: '1px solid rgba(255,255,255,0.06)',
-                                background: '#23233a',
-                                color: '#fff',
-                                fontSize: '1rem'
-                            }}
-                            value={search}
-                            onChange={e => setSearch(e.target.value)}
-                            placeholder="Search..."
-                        />
-                    </label>
-                    <label style={{
-                        fontWeight: 500,
-                        color: '#fff',
-                        fontSize: '1rem'
-                    }}>
-                        in
-                        <select
-                            style={{
-                                marginLeft: 8,
-                                padding: '0.45rem 0.6rem',
-                                borderRadius: 8,
-                                border: '1px solid rgba(255,255,255,0.06)',
-                                background: '#23233a',
-                                color: '#fff',
-                                fontSize: '1rem'
-                            }}
-                            value={searchCol}
-                            onChange={e => setSearchCol(e.target.value as SortKey)}
-                        >
-                            {sortOptions.map(opt => (
-                                <option key={opt.key}
-                                        value={opt.key}>{opt.label}</option>
-                            ))}
-                        </select>
-                    </label>
-                </div>
-
-                <div className={styles.toolbarRight}>
-                    <button
-                        onClick={onReload}
-                        disabled={reloading}
-                        className={`${styles.reload}`}
-                        aria-label="Reload server and view live logs"
-                        title="Reload and show live logs"
-                    >
-                        {reloading ? 'Reloading...' : 'Reload & Show Logs'}
-                    </button>
-                </div>
-            </div>
-
-            <div className={styles.tableOuterPad}>
-                <div className={styles.tableWrap}>
-                    <table className={styles.table}>
-                        <thead>
-                        <tr>
-                            {sortOptions.map(col => (
-                                <th
-                                    key={col.key}
-                                    onClick={() => handleSort(col.key)}
-                                    tabIndex={0}
-                                    aria-sort={sortKey === col.key ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none'}
-                                    style={{
-                                        cursor: 'pointer',
-                                        userSelect: 'none'
-                                    }}
-                                    scope="col"
+                <Card className={styles.toolbar}>
+                    <CardHeader>
+                        <div className={styles.toolbarRow}>
+                            <Stack gap="xs" align="start">
+                                <CardTitle>Proxy entries</CardTitle>
+                                <CardDescription>Search, sort, and edit every proxy record from one shared management view.</CardDescription>
+                            </Stack>
+                            <Inline gap="sm">
+                                <Button variant="brand" onClick={onCreate}>
+                                    <Plus size={16} aria-hidden="true"/>
+                                    Add entry
+                                </Button>
+                                <Button onClick={onReload} disabled={reloading}>
+                                    <RefreshCcw size={16} aria-hidden="true"/>
+                                    {reloading ? 'Reloading...' : 'Reload & show logs'}
+                                </Button>
+                            </Inline>
+                        </div>
+                    </CardHeader>
+                    <CardContent>
+                        <div className={styles.toolbarFields}>
+                            <Field label="Search" htmlFor="nginx-search" description="Filter by domains, host, id, type, or SSL state.">
+                                <Input
+                                    id="nginx-search"
+                                    value={search}
+                                    onChange={(event) => setSearch(event.target.value)}
+                                    placeholder="Search proxy entries…"
+                                />
+                            </Field>
+                            <Field label="Search column" htmlFor="nginx-search-column">
+                                <NativeSelect
+                                    id="nginx-search-column"
+                                    value={searchCol}
+                                    onChange={(event) => setSearchCol(event.target.value as SortKey)}
                                 >
-                                    {col.label}{arrow(col.key)}
-                                </th>
-                            ))}
-                            <th colSpan={2}>Actions</th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        {sortedEntries.map((entry) => (
-                            <tr key={entry.id}>
-                                <td>{entry.id}</td>
-                                <td style={{whiteSpace: 'pre-line'}}>{entry.domains}</td>
-                                <td style={{whiteSpace: 'pre-line'}}>{entry.proxy_pass_host}</td>
-                                <td>{entry.type}</td>
-                                <td>
-                                    <SslSwitch checked={entry.ssl}
-                                               id={`ssl-switch-${entry.id}`}
-                                               onChange={() => {
-                                               }}/>
-                                </td>
-                                <td>
-                                    <button
-                                        onClick={() => onEdit(entry)}
-                                        className={`${styles.button} ${styles.neutral}`}
-                                        aria-label={`Edit entry ${entry.id}`}>
-                                        Edit
-                                    </button>
-                                </td>
-                                <td>
-                                    <button
-                                        onClick={() => onDelete(entry.id)}
-                                        className={`${styles.button} ${styles.danger}`}
-                                        aria-label={`Delete entry ${entry.id}`}>
+                                    {sortOptions.map((option) => (
+                                        <option key={option.key} value={option.key}>{option.label}</option>
+                                    ))}
+                                </NativeSelect>
+                            </Field>
+                        </div>
+                    </CardContent>
+                </Card>
+
+                {sortedEntries.length === 0 ? (
+                    <Empty
+                        title="No entries found"
+                        description="Create a proxy entry or adjust the current search filters."
+                        icon={<Search size={36} aria-hidden="true"/>}
+                    />
+                ) : (
+                    <Card style={{width: '100%'}}>
+                        <CardContent>
+                            <Table>
+                                <TableHeader>
+                                    <TableRow>
+                                        {sortOptions.map((column) => (
+                                            <TableHead key={column.key}>
+                                                <Button
+                                                    type="button"
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    className={styles.sortButton}
+                                                    onClick={() => handleSort(column.key)}
+                                                    aria-sort={sortKey === column.key ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none'}
+                                                >
+                                                    {column.label}
+                                                    <SortIndicator column={column.key}/>
+                                                </Button>
+                                            </TableHead>
+                                        ))}
+                                        <TableHead>Actions</TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    {sortedEntries.map((entry) => (
+                                        <TableRow key={entry.id}>
+                                            <TableCell>{entry.id}</TableCell>
+                                            <TableCell>
+                                                <Text size="sm" style={{whiteSpace: 'pre-line'}}>{entry.domains}</Text>
+                                            </TableCell>
+                                            <TableCell>
+                                                <Text size="sm" style={{whiteSpace: 'pre-line'}}>{entry.proxy_pass_host}</Text>
+                                            </TableCell>
+                                            <TableCell>
+                                                <Badge variant={entry.type === 'PROXY' ? 'brand' : 'outline'}>{entry.type}</Badge>
+                                            </TableCell>
+                                            <TableCell>
+                                                <SslDisplay checked={entry.ssl}/>
+                                            </TableCell>
+                                            <TableCell>
+                                                <div className={styles.tableActions}>
+                                                    <Button variant="outline" size="sm" onClick={() => onEdit(entry)}>
+                                                        Edit
+                                                    </Button>
+                                                    <Button variant="danger" size="sm" onClick={() => onDelete(entry.id)}>
+                                                        Delete
+                                                    </Button>
+                                                </div>
+                                            </TableCell>
+                                        </TableRow>
+                                    ))}
+                                </TableBody>
+                            </Table>
+                        </CardContent>
+                    </Card>
+                )}
+
+                <Dialog open={Boolean(editing)} onOpenChange={(open) => !open && onCancel()}>
+                    {editing && (
+                        <DialogContent className={styles.dialogContent}>
+                            <DialogHeader>
+                                <DialogTitle>{editing.id ? 'Edit Nginx entry' : 'Create Nginx entry'}</DialogTitle>
+                                <DialogDescription>
+                                    Configure domains, upstream host behaviour, and any custom Nginx directives for this record.
+                                </DialogDescription>
+                            </DialogHeader>
+
+                            <Stack gap="md" align="start">
+                                <Field label="Domains" htmlFor="nginx-domains" description="One domain per line or semicolon-separated." required>
+                                    <Textarea
+                                        id="nginx-domains"
+                                        ref={domainsRef}
+                                        value={editing.domains}
+                                        onChange={(event) => onChange('domains', event.target.value)}
+                                        rows={3}
+                                        autoFocus
+                                        required
+                                    />
+                                </Field>
+
+                                <Field label="Proxy host" htmlFor="nginx-host" description="Destination upstream host or redirect target." required>
+                                    <Textarea
+                                        id="nginx-host"
+                                        ref={hostRef}
+                                        value={editing.proxy_pass_host}
+                                        onChange={(event) => onChange('proxy_pass_host', event.target.value)}
+                                        rows={3}
+                                        required
+                                    />
+                                </Field>
+
+                                <Field label="Entry type" htmlFor="nginx-type">
+                                    <NativeSelect
+                                        id="nginx-type"
+                                        value={editing.type}
+                                        onChange={(event) => onChange('type', event.target.value as ProxyType)}
+                                    >
+                                        <option value="PROXY">PROXY</option>
+                                        <option value="REDIRECT">REDIRECT</option>
+                                    </NativeSelect>
+                                </Field>
+
+                                <Field label="SSL" description="Enable HTTPS certificate handling for this route.">
+                                    <Inline gap="sm" wrap={false}>
+                                        <Switch checked={editing.ssl} onCheckedChange={(checked) => onChange('ssl', checked)}/>
+                                        <Text as="span" size="sm">{editing.ssl ? 'Enabled' : 'Disabled'}</Text>
+                                    </Inline>
+                                </Field>
+
+                                <Field label="Custom Nginx code" htmlFor="nginx-code" description="Optional raw Nginx configuration appended to this record.">
+                                    <Textarea
+                                        id="nginx-code"
+                                        ref={codeRef}
+                                        value={editing.nginx_custom_code ?? ''}
+                                        onChange={(event) => onChange('nginx_custom_code', event.target.value)}
+                                        rows={8}
+                                        placeholder="# Any custom Nginx config for this entry"
+                                    />
+                                </Field>
+                            </Stack>
+
+                            <DialogFooter>
+                                <Inline gap="sm">
+                                    <Button onClick={onSave} disabled={loading}>
+                                        {loading ? 'Saving...' : 'Save'}
+                                    </Button>
+                                    <Button variant="outline" onClick={onCancel} disabled={loading}>
+                                        Cancel
+                                    </Button>
+                                    <Button
+                                        variant="danger"
+                                        onClick={() => editing.id && onDelete(editing.id)}
+                                        disabled={loading || !editing.id}
+                                    >
                                         Delete
-                                    </button>
-                                </td>
-                            </tr>
-                        ))}
-                        {sortedEntries.length === 0 && (
-                            <tr>
-                                <td colSpan={sortOptions.length + 2} style={{
-                                    textAlign: 'center',
-                                    color: '#AAA'
-                                }}>No entries found.
-                                </td>
-                            </tr>
-                        )}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+                                    </Button>
+                                </Inline>
+                            </DialogFooter>
+                        </DialogContent>
+                    )}
+                </Dialog>
 
-            {editing && (
-                <div className={styles.modalOverlay} role="dialog"
-                     aria-modal="true">
-                    <div className={styles.modal}>
-                        <h3>{editing.id ? 'Edit Nginx Entry' : 'Create Nginx Entry'}</h3>
-                        <label>
-                            Domains
-                            <textarea
-                                ref={domainsRef}
-                                value={editing.domains}
-                                onChange={e => onChange('domains', e.target.value)}
-                                rows={2}
-                                spellCheck
-                                autoFocus
-                                aria-required="true"
-                                onInput={e => {
-                                    const ta = e.currentTarget;
-                                    ta.style.height = 'auto';
-                                    ta.style.height = ta.scrollHeight + 'px';
-                                }}
-                            />
-                        </label>
-                        <label>
-                            Proxy Host
-                            <textarea
-                                ref={hostRef}
-                                value={editing.proxy_pass_host}
-                                onChange={e => onChange('proxy_pass_host', e.target.value)}
-                                rows={2}
-                                spellCheck
-                                aria-required="true"
-                                onInput={e => {
-                                    const ta = e.currentTarget;
-                                    ta.style.height = 'auto';
-                                    ta.style.height = ta.scrollHeight + 'px';
-                                }}
-                            />
-                        </label>
-                        <label>
-                            Type
-                            <select
-                                value={editing.type}
-                                onChange={e => onChange('type', e.target.value as ProxyType)}
-                                aria-required="true"
-                            >
-                                <option value="PROXY">PROXY</option>
-                                <option value="REDIRECT">REDIRECT</option>
-                            </select>
-                        </label>
-                        <label>
-                            SSL
-                            <SslSwitch
-                                checked={editing.ssl}
-                                onChange={val => onChange('ssl', val)}
-                                id="modal-ssl-switch"
-                            />
-                        </label>
-                        <label>
-                            Custom Nginx Code
-                            <textarea
-                                ref={codeRef}
-                                value={editing.nginx_custom_code ?? ''}
-                                onChange={e => onChange('nginx_custom_code', e.target.value)}
-                                rows={5}
-                                spellCheck
-                                aria-multiline="true"
-                                placeholder="# Any custom Nginx config for this entry"
-                                onInput={e => {
-                                    const ta = e.currentTarget;
-                                    ta.style.height = 'auto';
-                                    ta.style.height = ta.scrollHeight + 'px';
-                                }}
-                            />
-                        </label>
-                        <div className={styles.modalActions}>
-                            <button
-                                onClick={onSave}
-                                disabled={loading}
-                                className={`${styles.button} ${styles.primary}`}
-                                aria-label="Save entry"
-                            >
-                                Save
-                            </button>
-                            <button
-                                onClick={onCancel}
-                                disabled={loading}
-                                className={`${styles.button} ${styles.neutral}`}
-                                aria-label="Cancel"
-                                type="button"
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                onClick={() => editing.id && onDelete(editing.id)}
-                                disabled={loading || !editing.id}
-                                className={`${styles.button} ${styles.danger}`}
-                                aria-label="Delete entry"
-                                type="button"
-                            >
-                                Delete
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
+                <Dialog open={showLogs} onOpenChange={setShowLogs}>
+                    {showLogs && (
+                        <DialogContent className={styles.logsDialog}>
+                            <DialogHeader>
+                                <DialogTitle>Reloading Nginx — live logs</DialogTitle>
+                                <DialogDescription>
+                                    Follow reload output in real time. Auto-scroll pauses if you scroll away from the bottom.
+                                </DialogDescription>
+                            </DialogHeader>
 
-            {showLogs && (
-                <div className={styles.modalOverlay} role="dialog"
-                     aria-modal="true">
-                    <div className={styles.logsModal}>
-                        <div className={styles.logsHeader}>
-                            <h3 style={{margin: 0}}>Reloading Nginx — Live
-                                Logs</h3>
-                            <button
-                                onClick={closeLogs}
-                                className={`${styles.button} ${styles.neutral}`}
-                                aria-label="Close logs"
-                            >
-                                Close
-                            </button>
-                        </div>
-                        <pre
-                            ref={logsPreRef}
-                            className={styles.logsContainer}
-                            aria-live="polite"
-                            role="log"
-                            onScroll={handleLogsScroll}
-                        >
-              {logs.map((line, i) => (
-                  <span key={i} className={classify(line)}>{line + '\n'}</span>
-              ))}
-            </pre>
-                    </div>
-                </div>
-            )}
+                            <Surface className={styles.logsSurface} padding="md" tone="secondary" radius="lg" shadow="none">
+                                <pre
+                                    ref={logsPreRef}
+                                    className={styles.logsContainer}
+                                    aria-live="polite"
+                                    role="log"
+                                    onScroll={handleLogsScroll}
+                                >
+                                    {logs.length === 0
+                                        ? 'Waiting for log output…'
+                                        : logs.map((line, index) => (
+                                            <span key={`${line}-${index}`} className={classify(line)}>{line + '\n'}</span>
+                                        ))}
+                                </pre>
+                            </Surface>
 
-            {toast && (
-                <div className={styles.toastViewport} role="status"
-                     aria-live="polite">
-                    <div
-                        className={`${styles.toast} ${toast.type === 'success' ? styles.toastSuccess : toast.type === 'error' ? styles.toastError : styles.toastInfo}`}>
-                        {toast.message}
-                    </div>
-                </div>
-            )}
-        </div>
+                            <DialogFooter>
+                                <Button variant="outline" onClick={closeLogs}>Close</Button>
+                            </DialogFooter>
+                        </DialogContent>
+                    )}
+                </Dialog>
+            </Stack>
+        </Container>
     );
 }
